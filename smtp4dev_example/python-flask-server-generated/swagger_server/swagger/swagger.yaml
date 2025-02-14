@@ -1,0 +1,71 @@
+openapi: 3.0.3
+info:
+  title: Email Sending API
+  description: A simple API to trigger sending an email.
+  version: 1.0.0
+servers:
+- url: http://localhost:5000
+  description: Local development server
+paths:
+  /send-email:
+    post:
+      summary: Send an email
+      description: Triggers an email to be sent using the provided details.
+      operationId: send_email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/sendemail_body"
+        required: true
+      responses:
+        "200":
+          description: Email successfully sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200"
+        "400":
+          description: Bad request (invalid input)
+        "500":
+          description: Internal server error
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+components:
+  schemas:
+    sendemail_body:
+      type: object
+      properties:
+        sender:
+          type: string
+          format: email
+          example: sender@example.com
+        recipients:
+          type: array
+          example:
+          - recipient1@example.com
+          - recipient2@example.com
+          items:
+            type: string
+            format: email
+        subject:
+          type: string
+          example: Hello World
+        body:
+          type: string
+          example: This is a test email.
+        username:
+          type: string
+          example: optional_user
+        password:
+          type: string
+          format: password
+          example: optional_password
+    inline_response_200:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Email sent successfully.
+      example:
+        message: Email sent successfully.
+

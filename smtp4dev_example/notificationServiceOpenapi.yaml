@@ -1,0 +1,59 @@
+openapi: 3.0.3
+info:
+  title: Email Sending API
+  description: A simple API to trigger sending an email.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+paths:
+  /send-email:
+    post:
+      summary: Send an email
+      description: Triggers an email to be sent using the provided details.
+      operationId: sendEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sender:
+                  type: string
+                  format: email
+                  example: "sender@example.com"
+                recipients:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  example: ["recipient1@example.com", "recipient2@example.com"]
+                subject:
+                  type: string
+                  example: "Hello World"
+                body:
+                  type: string
+                  example: "This is a test email."
+                username:
+                  type: string
+                  example: "optional_user"
+                password:
+                  type: string
+                  example: "optional_password"
+                  format: password
+      responses:
+        "200":
+          description: Email successfully sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Email sent successfully."
+        "400":
+          description: Bad request (invalid input)
+        "500":
+          description: Internal server error

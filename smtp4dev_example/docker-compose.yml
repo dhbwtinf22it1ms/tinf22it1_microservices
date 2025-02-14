@@ -1,0 +1,38 @@
+services:
+  smtp4dev:
+    image: rnwood/smtp4dev
+    container_name: smtp4dev
+    restart: always
+    ports:           # Syntax : host_port:container_port
+      - "5000:80"    # Web UI 
+      - "2525:25"    # SMTP server ! DOesn't use TLS
+      - "143:143"    # IMAP server (optional)
+    environment:
+      - ServerOptions__HostName=smtp4dev.local
+      - ServerOptions__PortNumber=2525
+      - ServerOptions__AllowRemoteConnections=true
+      - ServerOptions__UserName=admin  # Set username
+      - ServerOptions__Password=secret # Set password
+    volumes:
+      - smtp4dev_data:/smtp4dev
+
+
+#  swagger_server:
+#    build:
+#      context: ./python-flask-server-generated   # path to your Swagger server code
+#    container_name: swagger_server
+#    restart: always
+#    ports:
+#      - "8080:8080"   # Expose port 8080 for Swagger server
+#    environment:
+#      - SMTP_SERVER_HOST=smtp4dev.local  # Example: Config variable to connect to SMTP server
+#      - SMTP_SERVER_PORT=2525           # Port used for SMTP server in smtp4dev
+#      - SMTP_SERVER_USERNAME=admin      # If needed for authentication
+#      - SMTP_SERVER_PASSWORD=secret     # If needed for authentication
+#    depends_on:
+#      - smtp4dev   # Ensures smtp4dev starts first
+#    volumes:
+#      - ./python-flask-server-generated:/usr/src/app  # Mount Swagger code into the container 
+
+volumes:
+  smtp4dev_data:
