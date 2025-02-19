@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: Thesis Management Software (theses)
+  description: ""
+  version: 0.0.1
+
+servers:
+  - url: /api/v0
+
+tags:
+  - name: theses
+    description: Create and view theses
+  - name: comments
+    description: Post and view comments for theses
+  - name: likes
+    description: Track likes and dislikes of theses
+
+paths:
+  /theses:
+    get:
+      summary: List theses summaries
+      description: "Note: This endpoint might allow for filters in the future."
+      tags: ['theses']
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: 'common.yml#/components/schemas/ThesisSummary'
+    post:
+      summary: Create a new thesis for current user
+      tags: ['theses']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'common.yml#/components/schemas/Thesis'
+      responses:
+        '201':
+          description: The thesis was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/Thesis'
+        '409':
+          description: A thesis already exists for the current user. Only one thesis can exist per user.
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+                
+  /theses/mine:
+    get:
+      summary: Get information for the thesis of the current user
+      tags: ['theses']
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/Thesis'
+        '404':
+          description: No thesis could be found for the current user
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+    put:
+      summary: Update information for the thesis of the current user
+      tags: ['theses']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'common.yml#/components/schemas/Thesis'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/Thesis'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: 'common.yml#/components/schemas/Error'
+
+  /theses/{id}:
+    get:
+      summary: Get information for a specific thesis
+      tags: ['theses']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: "common.yml#/components/schemas/ThesisId"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/Thesis'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: 'common.yml#/components/schemas/Error'
+    put:
+      summary: Update information for a specific thesis
+      tags: ['theses']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/ThesisId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'common.yml#/components/schemas/Thesis'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/Thesis'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: 'common.yml#/components/schemas/Error'
+  /theses/{id}/comments:
+    post:
+      summary: Post a new comment for a specific thesis
+      tags: ['comments']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/ThesisId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'common.yml#/components/schemas/Comment'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/Comment'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: 'common.yml#/components/schemas/Error'
+
+    get:
+      summary: List all comments for specific thesis
+      tags: ['comments']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: 'common.yml#/components/schemas/ThesisId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: array
+                    items:
+                      $ref: 'common.yml#/components/schemas/Comment'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: 'common.yml#/components/schemas/Error'
+      

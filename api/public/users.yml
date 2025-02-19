@@ -1,0 +1,173 @@
+openapi: 3.0.3
+info:
+  title: Thesis Management Software (users)
+  description: ""
+  version: 0.0.1
+
+servers:
+  - url: /api/v0
+
+tags:
+  - name: users
+    description: Manage users
+
+paths:
+  /users:
+    get:
+      summary: List all users
+      tags: ['users']
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: array
+                    items:
+                      $ref: 'common.yml#/components/schemas/User'
+    post:
+      summary: Create one or more users
+      description: Calling this endpoint will also generate a registration token resource for every user.
+        Each registration token will be emailed to the respective user automatically.
+      tags: ['users']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  user:
+                    $ref: 'common.yml#/components/schemas/User'
+                  registrationToken:
+                    $ref: 'common.yml#/components/schemas/RegistrationToken'
+      responses:
+        '204':
+          description: Success. A list of all new user ids is returned. The order of users is retained from the request body array.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: array
+                    items:
+                      $ref: 'common.yml#/components/schemas/UserId'
+
+  /users/{userId}:
+    get:
+      summary: Get information about a specific user
+      tags: ['users']
+      parameters:
+        - $ref: "common.yml#/components/parameters/userId"
+        - name: registration_token # TODO: it might make sense to use `securitySchemes` and `security` here according to https://swagger.io/docs/specification/v3_0/describing-parameters/
+          in: query
+          description: A user's registration token. This allows requests to this endpoint for a user with the same registration_token without any authentication.
+          required: false
+          schema:
+            $ref: 'common.yml#/components/schemas/RegistrationToken'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/User'
+        '401':
+          description: Either a `registration_token` was provided, but it is not authorized to access the user with the requested `id` or no authentication was provided at all.
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+        '404':
+          description: User with given `id` could not be found
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+    put:
+      summary: Update information for a specific user
+      tags: ['users']
+      parameters:
+        - $ref: "common.yml#/components/parameters/userId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'common.yml#/components/schemas/User'
+      responses:
+        '200':
+          description: Success. The newly updated user information is returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/User'
+        '404':
+          description: User with given `id` could not be found
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+    delete:
+      summary: Delete a specific user
+      tags: ['users']
+      parameters:
+        - $ref: "common.yml#/components/parameters/userId"
+      responses:
+        '204':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: object
+                    nullable: true
+        '404':
+          description: User with given `id` could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+  /users/{userId}/regenerate_registration_token:
+    post:
+      summary: Regenerate a specific user's registration token
+      description: This endpoint is used to regenerate a new registration token for a specific user that exists already.
+        Calling this endpoint also causes the user to receive an email notification with the new registration token.
+      tags: ['users']
+      parameters:
+        - $ref: "common.yml#/components/parameters/userId"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: 'common.yml#/components/schemas/RegistrationToken'
+        '404':
+          description: User with given `id` could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
+        '409':
+          description: User has registered already.
+            Registered users are not eligible for new registration tokens Registered users are not eligible for new registration tokens.
+          content:
+            application/json:
+              schema:
+                $ref: 'common.yml#/components/schemas/Error'
