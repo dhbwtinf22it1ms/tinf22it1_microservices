@@ -1,0 +1,204 @@
+# MISSING APIS
+# - send notification about start of validation phase to all supervisors
+# - like/dislike (alternatively accept/deny) feature for theses
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "An error has occured."
+    Thesis:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ThesisId'
+        topic:
+          type: string
+          example: Thesis mangagement systems and their importance for universities
+        student:
+          type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/UserId'
+            title:
+              type: string
+              example: Herr
+            firstName:
+              type: string
+              example: Max
+            lastName:
+              type: string
+              example: Mustermann
+            registrationNumber:
+              type: string
+              example: 1234567
+            course:
+              type: string
+              example: TINF22IT1
+        preparationPeriod:
+          type: object
+          properties:
+            from:
+              type: string
+              description: ISO-8601 timestamp
+              example: 2024-06-01T00:00:00+0000
+            to:
+              type: string
+              description: ISO-8601 timestamp
+              example: 2025-01-01T23:59:59+0000
+        partnerCompany:
+          type: object
+          properties:
+            name:
+              type: string
+              example: DHBW Innovation Center
+            address:
+              type: object
+              properties:
+                street:
+                  type: string
+                  example: Coblitzallee
+                zipCode:
+                  type: integer
+                  format: int32
+                  example: 68163
+                city:
+                  type: string
+                  example: Mannheim
+        operationalLocation:
+          type: object
+          properties:
+            companyName:
+              type: string
+              example: DHBW Innovation Center
+            department:
+              type: string
+              example: Administration
+            address:
+              type: object
+              properties:
+                street:
+                  type: string
+                  example: Coblitzallee
+                zipCode:
+                  type: integer
+                  format: int32
+                  example: 68163
+                city:
+                  type: string
+                  example: Mannheim
+                country:
+                  type: string
+                  example: Germany
+        inCompanySupervisor:
+          type: object
+          properties:
+            title:
+              type: string
+              example: Frau
+            academicTitle:
+              type: string
+              example: Prof. Dr.
+            firstName:
+              type: string
+              example: Erika
+            lastName:
+              type: string
+              example: Musterfrau
+            phoneNumber:
+              type: string
+              example: +49 0621000000
+            email:
+              type: string
+              example: erika.musterfrau@dhbw-mannheim.de
+            academicDegree:
+              type: string
+              example: "Master of Science"
+        
+        excludeSupervisorsFromCompanies:
+          type: array
+          items:
+            type: string
+          example: ["Universität Mannheim"]
+        
+        # TODO status
+    ThesisSummary:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ThesisId"
+        title:
+          type: string
+        studentFirstName:
+          type: string
+        studentLastName:
+          type: string
+        # TODO status
+    User:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UserId'
+        registrationStatus:
+          type: object
+          readOnly: true
+          oneOf:
+            - type: object
+              properties:
+                pending:
+                  $ref: "#/components/schemas/RegistrationToken"
+            - type: object
+              properties:
+                completed:
+                  type: object
+                  nullable: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [student, supervisor, secretary, administrator]
+    ThesisId:
+      type: integer
+      format: int64
+      example: 38729
+      readOnly: true
+    UserId:
+      type: integer
+      format: int64
+      example: 83791
+      readOnly: true
+    RegistrationToken:
+      type: string
+      example: "RANDOMIZED_TOKEN"
+      readOnly: true
+    Comment:
+      type: object
+      properties:
+        author:
+          $ref: '#/components/schemas/UserId'
+        message:
+          type: string
+          example: "I really like your thesis. It sounds very interesting :)"
+
+  parameters:
+    thesisId:
+      name: thesisId
+      in: path
+      description: The thesis id
+      required: true
+      schema:
+        $ref: 'common.yml#/components/schemas/ThesisId'
+    userId:
+      name: userId
+      in: path
+      description: The user id
+      required: true
+      schema:
+        $ref: 'common.yml#/components/schemas/UserId'
