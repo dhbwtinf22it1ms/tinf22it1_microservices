@@ -14,6 +14,17 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 -- Daten-Export vom Benutzer nicht ausgewählt
 
+-- Exportiere Struktur von Tabelle public.company
+CREATE TABLE IF NOT EXISTS "company" (
+	"companyId" SERIAL NOT NULL,
+	"street" VARCHAR NOT NULL,
+	"zipcode" INTEGER NOT NULL,
+	"city" VARCHAR NOT NULL,
+	"name" VARCHAR NOT NULL,
+	"country" VARCHAR NOT NULL,
+	PRIMARY KEY ("companyId")
+);
+
 -- Daten-Export vom Benutzer nicht ausgewählt
 
 -- Exportiere Struktur von Tabelle public.thesis
@@ -37,7 +48,7 @@ CREATE TABLE IF NOT EXISTS "thesis" (
 	"operationalLocationCity" VARCHAR NOT NULL,
 	"operationalLocationCountry" VARCHAR NOT NULL,
 	"inCompanySupervisorAcademicTitle" VARCHAR NULL DEFAULT NULL,
-	"inCompanySupervisorTitle" VARCHAR NULL DEFAULT NULL,
+	"inCompanySupervisorTitle" VARCHAR NULL DEFAULT NULL, X
 	"inCompanySupervisorFirstName" VARCHAR NOT NULL,
 	"inCompanySupervisorLastName" VARCHAR NOT NULL,
 	"inCompanySupervisorEmail" VARCHAR NOT NULL,
