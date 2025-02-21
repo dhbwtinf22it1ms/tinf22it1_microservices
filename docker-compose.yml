@@ -1,5 +1,23 @@
 version: '3.8'
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: thesis_manager
+      POSTGRES_PASSWORD: thesis_manager
+      POSTGRES_DB: thesis_manager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thesis_manager -d thesis_manager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.1
     environment:
@@ -13,3 +31,6 @@ services:
     ports:
       - 8080:8080
     restart: unless-stopped
+
+volumes:
+  postgres_data:

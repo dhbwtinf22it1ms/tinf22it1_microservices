@@ -1,0 +1,426 @@
+openapi: 3.0.3
+info:
+  title: Thesis Management Software (theses)
+  description: ""
+  version: 0.0.1
+
+servers:
+  - url: /api/v0
+
+tags:
+  - name: theses
+    description: Create and view theses
+  - name: comments
+    description: Post and view comments for theses
+  - name: likes
+    description: Track likes and dislikes of theses
+
+paths:
+  /theses:
+    get:
+      summary: List theses summaries
+      description: "Note: This endpoint might allow for filters in the future."
+      tags: ['theses']
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ThesisSummary'
+    post:
+      summary: Create a new thesis for current user
+      tags: ['theses']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Thesis'
+      responses:
+        '201':
+          description: The thesis was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: '#/components/schemas/Thesis'
+        '409':
+          description: A thesis already exists for the current user. Only one thesis can exist per user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+  /theses/mine:
+    get:
+      summary: Get information for the thesis of the current user
+      tags: ['theses']
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: '#/components/schemas/Thesis'
+        '404':
+          description: No thesis could be found for the current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update information for the thesis of the current user
+      tags: ['theses']
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Thesis'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: '#/components/schemas/Thesis'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+
+  /theses/{id}:
+    get:
+      summary: Get information for a specific thesis
+      tags: ['theses']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: "#/components/schemas/ThesisId"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: '#/components/schemas/Thesis'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update information for a specific thesis
+      tags: ['theses']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: '#/components/schemas/ThesisId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Thesis'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: '#/components/schemas/Thesis'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+  /theses/{id}/comments:
+    post:
+      summary: Post a new comment for a specific thesis
+      tags: ['comments']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: '#/components/schemas/ThesisId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    $ref: '#/components/schemas/Comment'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+
+    get:
+      summary: List all comments for specific thesis
+      tags: ['comments']
+      parameters:
+        - name: id
+          in: path
+          description: The thesis id
+          required: true
+          schema:
+            $ref: '#/components/schemas/ThesisId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+        '404':
+          description: Thesis with does not exist
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+
+# MISSING APIS
+# - send notification about start of validation phase to all supervisors
+# - like/dislike (alternatively accept/deny) feature for theses
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "An error has occured."
+    Thesis:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ThesisId'
+        topic:
+          type: string
+          example: Thesis mangagement systems and their importance for universities
+        student:
+          type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/UserId'
+            title:
+              type: string
+              example: Herr
+            firstName:
+              type: string
+              example: Max
+            lastName:
+              type: string
+              example: Mustermann
+            registrationNumber:
+              type: string
+              example: 1234567
+            course:
+              type: string
+              example: TINF22IT1
+        preparationPeriod:
+          type: object
+          properties:
+            from:
+              type: string
+              description: ISO-8601 timestamp
+              example: 2024-06-01T00:00:00+0000
+            to:
+              type: string
+              description: ISO-8601 timestamp
+              example: 2025-01-01T23:59:59+0000
+        partnerCompany:
+          type: object
+          properties:
+            name:
+              type: string
+              example: DHBW Innovation Center
+            address:
+              type: object
+              properties:
+                street:
+                  type: string
+                  example: Coblitzallee
+                zipCode:
+                  type: integer
+                  format: int32
+                  example: 68163
+                city:
+                  type: string
+                  example: Mannheim
+        operationalLocation:
+          type: object
+          properties:
+            companyName:
+              type: string
+              example: DHBW Innovation Center
+            department:
+              type: string
+              example: Administration
+            address:
+              type: object
+              properties:
+                street:
+                  type: string
+                  example: Coblitzallee
+                zipCode:
+                  type: integer
+                  format: int32
+                  example: 68163
+                city:
+                  type: string
+                  example: Mannheim
+                country:
+                  type: string
+                  example: Germany
+        inCompanySupervisor:
+          type: object
+          properties:
+            title:
+              type: string
+              example: Frau
+            academicTitle:
+              type: string
+              example: Prof. Dr.
+            firstName:
+              type: string
+              example: Erika
+            lastName:
+              type: string
+              example: Musterfrau
+            phoneNumber:
+              type: string
+              example: +49 0621000000
+            email:
+              type: string
+              example: erika.musterfrau@dhbw-mannheim.de
+            academicDegree:
+              type: string
+              example: "Master of Science"
+        
+        excludeSupervisorsFromCompanies:
+          type: array
+          items:
+            type: string
+          example: ["Universität Mannheim"]
+        
+        # TODO status
+    ThesisSummary:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ThesisId"
+        title:
+          type: string
+        studentFirstName:
+          type: string
+        studentLastName:
+          type: string
+        # TODO status
+    User:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UserId'
+        registrationStatus:
+          type: object
+          readOnly: true
+          oneOf:
+            - type: object
+              properties:
+                pending:
+                  $ref: "#/components/schemas/RegistrationToken"
+            - type: object
+              properties:
+                completed:
+                  type: object
+                  nullable: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [student, supervisor, secretary, administrator]
+    ThesisId:
+      type: integer
+      format: int64
+      example: 38729
+      readOnly: true
+    UserId:
+      type: integer
+      format: int64
+      example: 83791
+      readOnly: true
+    RegistrationToken:
+      type: string
+      example: "RANDOMIZED_TOKEN"
+      readOnly: true
+    Comment:
+      type: object
+      properties:
+        author:
+          $ref: '#/components/schemas/UserId'
+        message:
+          type: string
+          example: "I really like your thesis. It sounds very interesting :)"
+
+  parameters:
+    thesisId:
+      name: thesisId
+      in: path
+      description: The thesis id
+      required: true
+      schema:
+        $ref: '#/components/schemas/ThesisId'
+    userId:
+      name: userId
+      in: path
+      description: The user id
+      required: true
+      schema:
+        $ref: '#/components/schemas/UserId'
