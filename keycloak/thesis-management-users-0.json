@@ -7,14 +7,18 @@
     "enabled" : true,
     "totp" : false,
     "emailVerified" : false,
-    "firstName" : "",
-    "lastName" : "",
+    "firstName" : "alberto",
+    "lastName" : "user1",
+    "email": "alberto@test.de",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-test-realm" ],
     "notBefore" : 0,
-    "groups" : [ "/Administrator" ]
+    "groups" : [ "/administrator" ],
+    "attributes": { 
+        "registration_complete": [true]
+    }
   },
   {
     "id" : "846aca25-d633-438c-8ccd-2d8fb2364c61",
@@ -23,14 +27,19 @@
     "enabled" : true,
     "totp" : false,
     "emailVerified" : false,
-    "firstName" : "",
-    "lastName" : "",
+    "firstName" : "franz",
+    "lastName" : "user2",
+    "email": "franz@test.de",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-test-realm" ],
     "notBefore" : 0,
-    "groups" : [ "/Student" ]
+    "groups" : [ "/student" ],
+    "attributes": { 
+        "registration_complete": [false],
+        "registration_token": ["1234"]
+    }
   },
   {
     "id" : "810f0803-2b1b-422b-8613-14d6b215664a",
@@ -39,13 +48,18 @@
     "enabled" : true,
     "totp" : false,
     "emailVerified" : false,
-    "firstName" : "",
-    "lastName" : "",
+    "firstName" : "gonk",
+    "lastName" : "droid",
+    "email": "gonk_droid@test.de",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-test-realm" ],
     "notBefore" : 0,
-    "groups" : [ "/Teacher" ]
+    "groups" : [ "/supervisor" ],
+    "attributes": { 
+        "registration_complete": [false],
+        "registration_token": ["4321"]
+    }
   }]
 }

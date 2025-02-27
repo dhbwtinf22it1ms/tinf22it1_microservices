@@ -419,8 +419,8 @@
   "groups": [
     {
       "id": "7f66fa3c-c849-4b6e-bfb9-d11be8d3fd16",
-      "name": "Administrator",
-      "path": "/Administrator",
+      "name": "administrator",
+      "path": "/administrator",
       "subGroups": [],
       "attributes": {},
       "realmRoles": [],
@@ -428,8 +428,8 @@
     },
     {
       "id": "8fae112e-f42f-426f-83a2-974e82f16f51",
-      "name": "Student",
-      "path": "/Student",
+      "name": "student",
+      "path": "/student",
       "subGroups": [],
       "attributes": {},
       "realmRoles": [],
@@ -437,8 +437,17 @@
     },
     {
       "id": "bd4715a0-dd84-4a19-bd74-8f845191d677",
-      "name": "Teacher",
-      "path": "/Teacher",
+      "name": "supervisor",
+      "path": "/supervisor",
+      "subGroups": [],
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {}
+    },
+    {
+      "id": "595e13a7-8796-4a47-b1e1-34b35449e2ad",
+      "name": "secretary",
+      "path": "/secretary",
       "subGroups": [],
       "attributes": {},
       "realmRoles": [],
