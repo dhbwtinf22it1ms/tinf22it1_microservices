@@ -1,0 +1,226 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  version: 0.0.1
+  description: API for managing notifications
+
+servers:
+  - url: /notifications/v0
+
+paths:
+  /deadlinereached:
+    post:
+      summary: Trigger notification for deadline reached
+      description: Send a notification to inform that all thesis proposals are online
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: array
+                  items:
+                    type: string
+                  description: List of recipient names
+                mailAddresses:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: List of email addresses
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+  /submitnotify:
+    post:
+      summary: Trigger notification for successful proposal upload
+      description: Send a mail to inform a student that their proposal was uploaded successfully
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the student
+                mailAddresses:
+                  type: string
+                  format: email
+                  description: Email addresses of recipient
+                ThesisId:
+                  $ref: '/schemas/ThesisId'
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+  /changenotify:
+    post:
+      summary: Trigger notification for changes in a proposal
+      description: Send a mail to inform a user about changes in a proposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the user
+                mailAddresses:
+                  type: string
+                  format: email
+                  description: Email addresses of recipient
+                ThesisId:
+                  type: integer
+                  format: int64
+                  example: 38729 
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+  /rejectnotify:
+    post:
+      summary: Trigger notification for proposal rejection
+      description: Send a mail to inform a student that their proposal was rejected
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the student
+                mailAddresses:
+                  type: string
+                  format: email
+                  description: Email addresses of recipient
+                ThesisId:
+                  type: integer
+                  format: int64
+                  example: 38729 
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+  /acceptnotify:
+    post:
+      summary: Trigger notification for proposal acceptance
+      description: Send a mail to inform a student that their proposal was accepted
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the student
+                mailAddresses:
+                  type: string
+                  format: email
+                  description: Email addresses of recipient
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+  /generic:
+    post:
+      summary: Trigger a generic notification
+      description: Send a custom notification with specified subject and message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: array
+                  items:
+                    type: string
+                  description: Name of the recipient
+                mailAddresses:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: List of email addresses
+                mailSubject:
+                  type: string
+                  description: Subject of the email
+                mailText:
+                  type: string
+                  description: Body of the email
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+  /registerpnotify:
+    post:
+      summary: Trigger notification for sign-up with login details
+      description: Send a notification with login details to a list of users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                names:
+                  type: array
+                  items:
+                    type: string
+                  description: List of names
+                mailAddresses:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                  description: List of email addresses
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  description: List of login codes
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+
+components:
+    schemas:
+      ThesisId:
+        type: integer
+        format: int64
+        example: 38729
+        readOnly: true
+    parameters:
+      thesisId:
+        name: thesisId
+        in: path
+        description: The thesis id
+        required: true
+        schema:
+          $ref: '/schemas/ThesisId'
