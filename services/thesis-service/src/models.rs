@@ -1,29 +1,28 @@
-use std::collections::HashMap;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
-use chrono::{naive::serde::ts_microseconds::deserialize, DateTime, Utc};
-use serde::{de::DeserializeOwned, Deserialize, Deserializer, Serialize, Serializer};
-use serde::ser::Error;
-
-#[derive(Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct UserId(pub u32);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct ThesisId(pub u32);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Thesis {
     #[serde(default, skip_deserializing)]
     pub id: Option<ThesisId>,
     pub topic: String,
     pub student: ThesisStudent,
-    // pub preparation_period: ThesisPreparationPeriod,
-    // pub partner_company: ThesisPartnerCompany,
-    // pub operational_location: ThesisOperationalLocation,
-    // pub in_company_supervisor: ThesisInCompanySupervisor,
-    // pub exclude_supervisors_from_companies: Vec<String>,
+    pub preparation_period: ThesisPreparationPeriod,
+    pub partner_company: ThesisPartnerCompany,
+    pub operational_location: ThesisOperationalLocation,
+    pub in_company_supervisor: ThesisInCompanySupervisor,
+    pub exclude_supervisors_from_companies: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisStudent {
     #[serde(default, skip_deserializing)]
     pub id: Option<UserId>,
@@ -34,7 +33,8 @@ pub struct ThesisStudent {
     pub course: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisPreparationPeriod {
     #[serde(with = "iso_8601_format")]
     pub from: DateTime<Utc>,
@@ -42,27 +42,31 @@ pub struct ThesisPreparationPeriod {
     pub to: DateTime<Utc>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisPartnerCompany {
     pub name: String,
     pub address: ThesisPartnerCompanyAddress,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisPartnerCompanyAddress {
     pub street: String,
     pub zip_code: u32,
     pub city: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisOperationalLocation {
     pub company_name: String,
     pub department: String,
     pub address: ThesisOperationalLocationAddress,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisOperationalLocationAddress {
     pub street: String,
     pub zip_code: u32,
@@ -70,7 +74,8 @@ pub struct ThesisOperationalLocationAddress {
     pub country: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisInCompanySupervisor {
     pub title: String,
     pub academic_title: String,
@@ -81,7 +86,8 @@ pub struct ThesisInCompanySupervisor {
     pub academic_degree: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThesisSummary {
     pub id: ThesisId,
     pub title: String,
@@ -89,8 +95,8 @@ pub struct ThesisSummary {
     pub student_last_name: String,
 }
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Comment {
     #[serde(default, skip_deserializing)]
     pub author: Option<UserId>,
@@ -122,5 +128,16 @@ mod iso_8601_format {
         ))?;
 
         Ok(naive.and_utc())
+    }
+}
+
+impl From<Thesis> for ThesisSummary {
+    fn from(value: Thesis) -> Self {
+        Self {
+            id: value.id.expect("the id to be Some because thesis summaries can only be created for theses that already exist"),
+            title: value.topic,
+            student_first_name: value.student.first_name,
+            student_last_name: value.student.last_name,
+        }
     }
 }

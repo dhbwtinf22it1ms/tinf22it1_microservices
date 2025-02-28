@@ -11,8 +11,8 @@ use tracing::level_filters::LevelFilter;
 
 mod database;
 mod models;
-mod routes;
 mod result;
+mod routes;
 
 #[derive(Envconfig)]
 pub struct Config {
@@ -31,7 +31,7 @@ pub struct Config {
 
 #[derive(Clone)]
 pub struct AppState {
-    // database_pool: Arc<r2d2::Pool<ConnectionManager<PgConnection>>>,
+    database_pool: Arc<r2d2::Pool<ConnectionManager<PgConnection>>>,
 }
 
 // #[tokio::main]
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let state = AppState {
-        // database_pool: Arc::new(database::create_connection_pool("")?)
+        database_pool: Arc::new(database::create_connection_pool(&config.database_url)?),
     };
 
     let router = build_top_level_router(state);

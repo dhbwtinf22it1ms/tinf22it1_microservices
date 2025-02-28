@@ -17,7 +17,7 @@ iso8601 = { version = "0.6", features = ["chrono"] }
 
 
 # Database
-diesel = { version = "2", features = ["postgres", "r2d2"] }
+diesel = { version = "2", features = ["postgres", "r2d2", "chrono"] }
 
 # Logging/tracing
 tracing = "0.1"
