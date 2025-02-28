@@ -41,6 +41,6 @@ class mail_client:
 if __name__ == "__main__":
     client = mail_client(SMTP_SERVER, SMTP_PORT)
     print("Without credentials")
-    client.send_mail(FROM_EMAIL,[TO_EMAIL, TO_EMAIL2], "This is a test", "Hello World!")
+    client.send_mail(FROM_EMAIL,[TO_EMAIL, TO_EMAIL2], "This is a test", "Hello Microservises!")
     print("Wit credentials")
     client.send_mail(FROM_EMAIL,[TO_EMAIL, TO_EMAIL2], "This is a test", "Hello World! With auth", USERNAME, PASSWORD)
