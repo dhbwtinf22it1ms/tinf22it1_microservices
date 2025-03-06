@@ -1,11 +1,14 @@
 using AutoMapper;
-using Dhbw.ThesisManager.Api.Data;
+using Dhbw.ThesisManager.Domain.Data;
 using Dhbw.ThesisManager.Api.Models;
 using Dhbw.ThesisManager.Domain.Events;
 using Dhbw.ThesisManager.Api.Services;
+using Dhbw.ThesisManager.Domain.Data;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
+using InCompanySupervisor = Dhbw.ThesisManager.Domain.Data.Entities.InCompanySupervisor;
+using Student = Dhbw.ThesisManager.Domain.Data.Entities.Student;
 
 namespace Dhbw.ThesisManager.Api.Tests.Controller;
 
@@ -40,13 +43,13 @@ public class ThesisControllerTests
     {
         // Arrange
         var thesis = new Thesis { Topic = "Test Thesis" };
-        var thesisEntity = new Data.Entities.Thesis
+        var thesisEntity = new Domain.Data.Entities.Thesis
         {
             Topic = "Test Thesis",
             StudentId = 1,
             PreparationPeriodFrom = DateTime.UtcNow,
             PreparationPeriodTo = DateTime.UtcNow.AddMonths(6),
-            Student = new Data.Entities.Student
+            Student = new Student
             {
                 Title = "Mr.",
                 FirstName = "John",
@@ -54,7 +57,7 @@ public class ThesisControllerTests
                 RegistrationNumber = "12345",
                 Course = "TINF22"
             },
-            InCompanySupervisor = new Data.Entities.InCompanySupervisor
+            InCompanySupervisor = new InCompanySupervisor
             {
                 Title = "Dr.",
                 AcademicTitle = "Prof.",
@@ -66,8 +69,8 @@ public class ThesisControllerTests
             }
         };
 
-        _mapperMock.Setup(m => m.Map(thesis, It.IsAny<Data.Entities.Thesis>()))
-            .Callback<Thesis, Data.Entities.Thesis>((src, dest) => {
+        _mapperMock.Setup(m => m.Map(thesis, It.IsAny<Domain.Data.Entities.Thesis>()))
+            .Callback<Thesis, Domain.Data.Entities.Thesis>((src, dest) => {
                 dest.Topic = thesisEntity.Topic;
                 dest.StudentId = thesisEntity.StudentId;
                 dest.PreparationPeriodFrom = thesisEntity.PreparationPeriodFrom;
@@ -76,7 +79,7 @@ public class ThesisControllerTests
                 dest.InCompanySupervisor = thesisEntity.InCompanySupervisor;
             })
             .Returns(thesisEntity);
-        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Data.Entities.Thesis>()))
+        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Domain.Data.Entities.Thesis>()))
             .Returns(new Thesis { Topic = thesisEntity.Topic });
 
         // Act
@@ -98,7 +101,7 @@ public class ThesisControllerTests
     {
         // Arrange
         var thesis = new Thesis { Topic = "Test Thesis" };
-        var thesisEntity = new Data.Entities.Thesis
+        var thesisEntity = new Domain.Data.Entities.Thesis
         {
             Topic = "Test Thesis",
             StudentId = 1,
@@ -108,8 +111,8 @@ public class ThesisControllerTests
             InCompanySupervisor = null
         };
 
-        _mapperMock.Setup(m => m.Map(thesis, It.IsAny<Data.Entities.Thesis>()))
-            .Callback<Thesis, Data.Entities.Thesis>((src, dest) => {
+        _mapperMock.Setup(m => m.Map(thesis, It.IsAny<Domain.Data.Entities.Thesis>()))
+            .Callback<Thesis, Domain.Data.Entities.Thesis>((src, dest) => {
                 dest.Topic = thesisEntity.Topic;
                 dest.StudentId = thesisEntity.StudentId;
                 dest.PreparationPeriodFrom = thesisEntity.PreparationPeriodFrom;
@@ -118,7 +121,7 @@ public class ThesisControllerTests
                 dest.InCompanySupervisor = thesisEntity.InCompanySupervisor;
             })
             .Returns(thesisEntity);
-        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Data.Entities.Thesis>()))
+        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Domain.Data.Entities.Thesis>()))
             .Returns(new Thesis { Topic = thesisEntity.Topic });
 
         // Act
@@ -141,7 +144,7 @@ public class ThesisControllerTests
     {
         // Arrange
         var thesis = new Thesis { Topic = "Test Thesis" };
-        var thesisEntity = new Data.Entities.Thesis
+        var thesisEntity = new Domain.Data.Entities.Thesis
         {
             Topic = "Test Thesis",
             StudentId = 1,
@@ -149,15 +152,15 @@ public class ThesisControllerTests
             PreparationPeriodTo = DateTime.UtcNow.AddMonths(6)
         };
 
-        _mapperMock.Setup(m => m.Map(thesis, It.IsAny<Data.Entities.Thesis>()))
-            .Callback<Thesis, Data.Entities.Thesis>((src, dest) => {
+        _mapperMock.Setup(m => m.Map(thesis, It.IsAny<Domain.Data.Entities.Thesis>()))
+            .Callback<Thesis, Domain.Data.Entities.Thesis>((src, dest) => {
                 dest.Topic = thesisEntity.Topic;
                 dest.StudentId = thesisEntity.StudentId;
                 dest.PreparationPeriodFrom = thesisEntity.PreparationPeriodFrom;
                 dest.PreparationPeriodTo = thesisEntity.PreparationPeriodTo;
             })
             .Returns(thesisEntity);
-        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Data.Entities.Thesis>()))
+        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Domain.Data.Entities.Thesis>()))
             .Returns(new Thesis { Topic = thesisEntity.Topic });
 
         // Act
@@ -181,12 +184,12 @@ public class ThesisControllerTests
     public async Task ThesesAllAsync_ShouldReturnAllTheses()
     {
         // Arrange
-        var theses = new List<Data.Entities.Thesis>
+        var theses = new List<Domain.Data.Entities.Thesis>
         {
             new() { 
                 Id = 1, 
                 Topic = "Test Thesis 1",
-                Student = new Data.Entities.Student 
+                Student = new Student 
                 { 
                     FirstName = "John", 
                     LastName = "Doe",
@@ -198,7 +201,7 @@ public class ThesisControllerTests
             new() { 
                 Id = 2, 
                 Topic = "Test Thesis 2",
-                Student = new Data.Entities.Student 
+                Student = new Student 
                 { 
                     FirstName = "Jane", 
                     LastName = "Smith",
@@ -218,7 +221,7 @@ public class ThesisControllerTests
             StudentFirstName = t.Student.FirstName,
             StudentLastName = t.Student.LastName
         }).ToList();
-        _mapperMock.Setup(m => m.Map<List<ThesisSummary>>(It.IsAny<List<Data.Entities.Thesis>>()))
+        _mapperMock.Setup(m => m.Map<List<ThesisSummary>>(It.IsAny<List<Domain.Data.Entities.Thesis>>()))
             .Returns(expectedSummaries);
 
         // Act
@@ -234,11 +237,11 @@ public class ThesisControllerTests
     public async Task MineGETAsync_ShouldReturnUserThesis()
     {
         // Arrange
-        var thesis = new Data.Entities.Thesis
+        var thesis = new Domain.Data.Entities.Thesis
         {
             Id = 1,
             Topic = "My Thesis",
-            Student = new Data.Entities.Student 
+            Student = new Student 
             { 
                 Id = 1, 
                 FirstName = "John", 
@@ -251,7 +254,7 @@ public class ThesisControllerTests
         await _dbContext.Theses.AddAsync(thesis);
         await _dbContext.SaveChangesAsync();
 
-        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Data.Entities.Thesis>()))
+        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Domain.Data.Entities.Thesis>()))
             .Returns(new Thesis { Topic = thesis.Topic });
 
         // Act
@@ -266,11 +269,11 @@ public class ThesisControllerTests
     public async Task MinePUTAsync_ShouldUpdateUserThesis()
     {
         // Arrange
-        var thesis = new Data.Entities.Thesis
+        var thesis = new Domain.Data.Entities.Thesis
         {
             Id = 1,
             Topic = "Original Topic",
-            Student = new Data.Entities.Student 
+            Student = new Student 
             { 
                 Id = 1, 
                 FirstName = "John", 
@@ -286,7 +289,7 @@ public class ThesisControllerTests
         var updatedThesis = new Thesis { Topic = "Updated Topic" };
 
         _mapperMock.Setup(m => m.Map(updatedThesis, thesis));
-        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Data.Entities.Thesis>()))
+        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Domain.Data.Entities.Thesis>()))
             .Returns(updatedThesis);
 
         // Act
@@ -301,11 +304,11 @@ public class ThesisControllerTests
     public async Task ThesesGETAsync_ShouldReturnThesisById()
     {
         // Arrange
-        var thesis = new Data.Entities.Thesis
+        var thesis = new Domain.Data.Entities.Thesis
         {
             Id = 1,
             Topic = "Test Thesis",
-            Student = new Data.Entities.Student 
+            Student = new Student 
             { 
                 Id = 1, 
                 FirstName = "John", 
@@ -318,7 +321,7 @@ public class ThesisControllerTests
         await _dbContext.Theses.AddAsync(thesis);
         await _dbContext.SaveChangesAsync();
 
-        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Data.Entities.Thesis>()))
+        _mapperMock.Setup(m => m.Map<Thesis>(It.IsAny<Domain.Data.Entities.Thesis>()))
             .Returns(new Thesis { Topic = thesis.Topic });
 
         // Act
@@ -340,7 +343,7 @@ public class ThesisControllerTests
     public async Task CommentsPOSTAsync_ShouldAddComment()
     {
         // Arrange
-        var thesis = new Data.Entities.Thesis
+        var thesis = new Domain.Data.Entities.Thesis
         {
             Id = 1,
             Topic = "Test Thesis"
@@ -354,7 +357,7 @@ public class ThesisControllerTests
             Message = "Test Comment"
         };
 
-        _mapperMock.Setup(m => m.Map<Comment>(It.IsAny<Data.Entities.Comment>()))
+        _mapperMock.Setup(m => m.Map<Comment>(It.IsAny<Domain.Data.Entities.Comment>()))
             .Returns(comment);
 
         // Act
@@ -375,10 +378,10 @@ public class ThesisControllerTests
     public async Task CommentsGETAsync_ShouldReturnComments()
     {
         // Arrange
-        var thesis = new Data.Entities.Thesis { Id = 1, Topic = "Test Thesis" };
+        var thesis = new Domain.Data.Entities.Thesis { Id = 1, Topic = "Test Thesis" };
         await _dbContext.Theses.AddAsync(thesis);
         
-        var comments = new List<Data.Entities.Comment>
+        var comments = new List<Domain.Data.Entities.Comment>
         {
             new() { ThesisId = 1, Author = 1, Message = "Comment 1", CreatedAt = DateTime.UtcNow },
             new() { ThesisId = 1, Author = 2, Message = "Comment 2", CreatedAt = DateTime.UtcNow }
@@ -387,7 +390,7 @@ public class ThesisControllerTests
         await _dbContext.SaveChangesAsync();
 
         var expectedComments = comments.Select(c => new Comment { Author = c.Author, Message = c.Message }).ToList();
-        _mapperMock.Setup(m => m.Map<List<Comment>>(It.IsAny<List<Data.Entities.Comment>>()))
+        _mapperMock.Setup(m => m.Map<List<Comment>>(It.IsAny<List<Domain.Data.Entities.Comment>>()))
             .Returns(expectedComments);
 
         // Act

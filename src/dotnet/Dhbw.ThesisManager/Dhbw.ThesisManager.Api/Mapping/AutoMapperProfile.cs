@@ -1,20 +1,26 @@
 using AutoMapper;
-using Dhbw.ThesisManager.Api.Data.Entities;
+using Address = Dhbw.ThesisManager.Domain.Data.Entities.Address;
+using Comment = Dhbw.ThesisManager.Domain.Data.Entities.Comment;
+using InCompanySupervisor = Dhbw.ThesisManager.Domain.Data.Entities.InCompanySupervisor;
+using OperationalLocation = Dhbw.ThesisManager.Domain.Data.Entities.OperationalLocation;
+using PartnerCompany = Dhbw.ThesisManager.Domain.Data.Entities.PartnerCompany;
+using Student = Dhbw.ThesisManager.Domain.Data.Entities.Student;
+using Thesis = Dhbw.ThesisManager.Domain.Data.Entities.Thesis;
 
-namespace Dhbw.ThesisManager.Api.Data.Mapping;
-using DbEntities = Dhbw.ThesisManager.Api.Data.Entities;
+namespace Dhbw.ThesisManager.Api.Mapping;
+using DbEntities = Domain.Data.Entities;
 
 public class AutoMapperProfile : Profile
 {
     public AutoMapperProfile()
     {
-        CreateMap<DbEntities.Student, Models.Student>()
+        CreateMap<Student, Models.Student>()
             .ReverseMap();
             
-        CreateMap<DbEntities.Address, Models.Address>()
+        CreateMap<Address, Models.Address>()
             .ReverseMap();
             
-        CreateMap<DbEntities.Thesis, Models.Thesis>()
+        CreateMap<Thesis, Models.Thesis>()
             .ForMember(dest => dest.PreparationPeriod, opt => opt.MapFrom(src => new Models.PreparationPeriod 
             { 
                 From = src.PreparationPeriodFrom.ToString("O"),
@@ -24,19 +30,19 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.PreparationPeriodFrom, opt => opt.MapFrom(src => DateTime.Parse(src.PreparationPeriod.From)))
             .ForMember(dest => dest.PreparationPeriodTo, opt => opt.MapFrom(src => DateTime.Parse(src.PreparationPeriod.To)));
             
-        CreateMap<DbEntities.PartnerCompany, Models.PartnerCompany>()
+        CreateMap<PartnerCompany, Models.PartnerCompany>()
             .ReverseMap();
             
-        CreateMap<DbEntities.OperationalLocation, Models.OperationalLocation>()
+        CreateMap<OperationalLocation, Models.OperationalLocation>()
             .ReverseMap();
             
-        CreateMap<DbEntities.InCompanySupervisor, Models.InCompanySupervisor>()
+        CreateMap<InCompanySupervisor, Models.InCompanySupervisor>()
             .ReverseMap();
             
-        CreateMap<DbEntities.Comment, Models.Comment>()
+        CreateMap<Comment, Models.Comment>()
             .ReverseMap();
             
-        CreateMap<DbEntities.Thesis, Models.ThesisSummary>()
+        CreateMap<Thesis, Models.ThesisSummary>()
             .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Topic))
             .ForMember(dest => dest.StudentFirstName, opt => opt.MapFrom(src => src.Student.FirstName))
             .ForMember(dest => dest.StudentLastName, opt => opt.MapFrom(src => src.Student.LastName));

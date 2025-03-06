@@ -61,21 +61,21 @@ services:
       - ConnectionStrings__DefaultConnection=Host=postgres;Database=thesis_manager;Username=thesis_manager;Password=thesis_manager
     restart: "no"
 
-  notification:
-    build:
-      context: .
-      dockerfile: Dhbw.ThesisManager/Dhbw.ThesisManager.NotificationService/Dockerfile
-    depends_on:
-      - rabbitmq
-      - smtp4dev
-    environment:
-      - RabbitMq__Host=rabbitmq
-      - RabbitMq__Username=thesis_manager
-      - RabbitMq__Password=thesis_manager
-      - Smtp__Host=smtp4dev
-      - Smtp__Port=25
-      - Notification__NotificationRecipients__0=admin@thesismanager.local
-    restart: unless-stopped
+  # notification:
+  #   build:
+  #     context: .
+  #     dockerfile: Dhbw.ThesisManager/Dhbw.ThesisManager.NotificationService/Dockerfile
+  #   depends_on:
+  #     - rabbitmq
+  #     - smtp4dev
+  #   environment:
+  #     - RabbitMq__Host=rabbitmq
+  #     - RabbitMq__Username=thesis_manager
+  #     - RabbitMq__Password=thesis_manager
+  #     - Smtp__Host=smtp4dev
+  #     - Smtp__Port=25
+  #     - Notification__NotificationRecipients__0=admin@thesismanager.local
+  #   restart: unless-stopped
 
   smtp4dev:
     image: rnwood/smtp4dev:v3

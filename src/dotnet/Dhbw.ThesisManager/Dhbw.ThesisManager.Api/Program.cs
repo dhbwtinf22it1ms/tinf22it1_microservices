@@ -1,12 +1,13 @@
 using Dhbw.ThesisManager.Api;
 using Dhbw.ThesisManager.Api.Configuration;
 using Dhbw.ThesisManager.Api.Components;
-using Dhbw.ThesisManager.Api.Data;
+using Dhbw.ThesisManager.Domain.Data;
 using EasyNetQ;
-using Dhbw.ThesisManager.Api.Data.Mapping;
 using Dhbw.ThesisManager.Api.Services;
 using Dhbw.ThesisManager.Client.Pages;
+using Dhbw.ThesisManager.Domain.Data;
 using Microsoft.EntityFrameworkCore;
+using Dhbw.ThesisManager.Api.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 

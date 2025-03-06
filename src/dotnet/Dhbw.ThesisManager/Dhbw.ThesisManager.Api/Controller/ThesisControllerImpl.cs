@@ -1,14 +1,15 @@
 using AutoMapper;
-using Dhbw.ThesisManager.Api.Data;
+using Dhbw.ThesisManager.Domain.Data;
 using Dhbw.ThesisManager.Api.Models;
 using Dhbw.ThesisManager.Domain.Events;
 using Dhbw.ThesisManager.Api.Services;
 using Dhbw.ThesisManager.Api.Models.Responses;
+using Dhbw.ThesisManager.Domain.Data;
 using Microsoft.EntityFrameworkCore;
+using Comment = Dhbw.ThesisManager.Domain.Data.Entities.Comment;
+using Thesis = Dhbw.ThesisManager.Domain.Data.Entities.Thesis;
 
 namespace Dhbw.ThesisManager.Api;
-
-using Entities = Dhbw.ThesisManager.Api.Data.Entities;
 
 public class ThesisControllerImpl : IThesisController
 {
@@ -32,14 +33,14 @@ public class ThesisControllerImpl : IThesisController
         return _mapper.Map<List<ThesisSummary>>(theses);
     }
 
-    public async Task<ThesisResponse> ThesesPOSTAsync(Thesis body, CancellationToken cancellationToken = default)
+    public async Task<ThesisResponse> ThesesPOSTAsync(Models.Thesis body, CancellationToken cancellationToken = default)
     {
-        var entity = new Entities.Thesis();
+        var entity = new Thesis();
         _mapper.Map(body, entity);
         _context.Theses.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
         
-        var result = _mapper.Map<Thesis>(entity);
+        var result = _mapper.Map<Models.Thesis>(entity);
 
         // Publish NewThesisAdded event
         await _eventPublisher.PublishAsync(new NewThesisAdded
@@ -73,10 +74,10 @@ public class ThesisControllerImpl : IThesisController
             throw new Exception("Thesis not found");
         }
         
-        return new ThesisResponse { Ok = _mapper.Map<Thesis>(thesis) };
+        return new ThesisResponse { Ok = _mapper.Map<Models.Thesis>(thesis) };
     }
 
-    public async Task<ThesisResponse> MinePUTAsync(Thesis body, CancellationToken cancellationToken = default)
+    public async Task<ThesisResponse> MinePUTAsync(Models.Thesis body, CancellationToken cancellationToken = default)
     {
         // TODO: Get current user ID from auth context
         var userId = 1; // Placeholder
@@ -93,7 +94,7 @@ public class ThesisControllerImpl : IThesisController
         _mapper.Map(body, thesis);
         await _context.SaveChangesAsync(cancellationToken);
         
-        return new ThesisResponse { Ok = _mapper.Map<Thesis>(thesis) };
+        return new ThesisResponse { Ok = _mapper.Map<Models.Thesis>(thesis) };
     }
 
     public async Task<ThesisResponse> ThesesGETAsync(long id, CancellationToken cancellationToken = default)
@@ -110,10 +111,10 @@ public class ThesisControllerImpl : IThesisController
             throw new Exception("Thesis not found");
         }
         
-        return new ThesisResponse { Ok = _mapper.Map<Thesis>(thesis) };
+        return new ThesisResponse { Ok = _mapper.Map<Models.Thesis>(thesis) };
     }
 
-    public async Task<ThesisResponse> ThesesPUTAsync(long id, Thesis body, CancellationToken cancellationToken = default)
+    public async Task<ThesisResponse> ThesesPUTAsync(long id, Models.Thesis body, CancellationToken cancellationToken = default)
     {
         var thesis = await _context.Theses
             .Include(t => t.Student)
@@ -127,10 +128,10 @@ public class ThesisControllerImpl : IThesisController
         _mapper.Map(body, thesis);
         await _context.SaveChangesAsync(cancellationToken);
         
-        return new ThesisResponse { Ok = _mapper.Map<Thesis>(thesis) };
+        return new ThesisResponse { Ok = _mapper.Map<Models.Thesis>(thesis) };
     }
 
-    public async Task<CommentResponse> CommentsPOSTAsync(long id, Comment body, CancellationToken cancellationToken = default)
+    public async Task<CommentResponse> CommentsPOSTAsync(long id, Models.Comment body, CancellationToken cancellationToken = default)
     {
         var thesis = await _context.Theses
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
@@ -140,7 +141,7 @@ public class ThesisControllerImpl : IThesisController
             throw new Exception("Thesis not found");
         }
         
-        var comment = new Entities.Comment
+        var comment = new Comment
         {
             ThesisId = id,
             CreatedAt = DateTime.UtcNow,
@@ -151,7 +152,7 @@ public class ThesisControllerImpl : IThesisController
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync(cancellationToken);
         
-        var result = _mapper.Map<Comment>(comment);
+        var result = _mapper.Map<Models.Comment>(comment);
         return new CommentResponse { Ok = result };
     }
 
@@ -162,6 +163,6 @@ public class ThesisControllerImpl : IThesisController
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync(cancellationToken);
             
-        return new CommentListResponse { Ok = _mapper.Map<List<Comment>>(comments) };
+        return new CommentListResponse { Ok = _mapper.Map<List<Models.Comment>>(comments) };
     }
 }
