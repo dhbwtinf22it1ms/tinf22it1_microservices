@@ -1,0 +1,20 @@
+[package]
+name = "user-service"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.96"
+axum = {version = "0.8.1", features = ["macros"]}
+envconfig = "0.11.0"
+serde = {version = "1.0.218", features = ["derive"]}
+tokio = {version = "1.43.0", features = ["rt-multi-thread"]}
+keycloak = "26.1.0"
+reqwest = "0.12.12"
+serde_json = "1.0.140"
+futures = "0.3.31"
+thiserror = "2.0.11"
+uuid = { version = "1.15.1", features = ["v4"] }
+axum-macros = "0.5.0"
+tower-http = { version = "0.6.2", features = ["catch-panic"] }
+strum = { version = "0.27.1", features = ["derive"] }
