@@ -1,0 +1,51 @@
+{
+  "realm" : "thesis-management",
+  "users" : [ {
+    "id" : "273f82c5-2df1-41f3-86e1-361ad5639fc5",
+    "createdTimestamp" : 1739488520940,
+    "username" : "testuser1@dhbw-mannheim.de",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "firstName" : "",
+    "lastName" : "",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-test-realm" ],
+    "notBefore" : 0,
+    "groups" : [ "/administrator" ]
+  },
+  {
+    "id" : "846aca25-d633-438c-8ccd-2d8fb2364c61",
+    "createdTimestamp" : 1739488520940,
+    "username" : "testuser2@dhbw-mannheim.de",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "firstName" : "",
+    "lastName" : "",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-test-realm" ],
+    "notBefore" : 0,
+    "groups" : [ "/student" ]
+  },
+  {
+    "id" : "810f0803-2b1b-422b-8613-14d6b215664a",
+    "createdTimestamp" : 1739488520940,
+    "username" : "testuser3@dhbw-mannheim.de",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "firstName" : "",
+    "lastName" : "",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-test-realm" ],
+    "notBefore" : 0,
+    "groups" : [ "/supervisor" ]
+  }]
+}

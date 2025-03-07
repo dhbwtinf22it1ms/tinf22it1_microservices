@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dhbw.ThesisManager.Api", "Dhbw.ThesisManager\Dhbw.ThesisManager.Api\Dhbw.ThesisManager.Api.csproj", "{1EDEDB43-7016-4D71-8D74-E999E23D0F40}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Setup", "Dhbw.ThesisManager\Setup\Setup.csproj", "{A8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dhbw.ThesisManager.Domain", "Dhbw.ThesisManager\Dhbw.ThesisManager.Domain\Dhbw.ThesisManager.Domain.csproj", "{B8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dhbw.ThesisManager.NotificationService", "Dhbw.ThesisManager\Dhbw.ThesisManager.NotificationService\Dhbw.ThesisManager.NotificationService.csproj", "{C8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dhbw.ThesisManager.Api.Tests", "Dhbw.ThesisManager\Dhbw.ThesisManager.Api.Tests\Dhbw.ThesisManager.Api.Tests.csproj", "{5125F587-B6DD-42BA-A64D-22B97291E518}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dhbw.ThesisManager.Client", "Dhbw.ThesisManager\Dhbw.ThesisManager.Client\Dhbw.ThesisManager.Client.csproj", "{6A52E99D-F7F2-4644-8751-A94426DC96CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EDEDB43-7016-4D71-8D74-E999E23D0F40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EDEDB43-7016-4D71-8D74-E999E23D0F40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EDEDB43-7016-4D71-8D74-E999E23D0F40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EDEDB43-7016-4D71-8D74-E999E23D0F40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8B9C6E4-7E9D-4F8A-9E5D-3B8C7F8E9A1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5125F587-B6DD-42BA-A64D-22B97291E518}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5125F587-B6DD-42BA-A64D-22B97291E518}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5125F587-B6DD-42BA-A64D-22B97291E518}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5125F587-B6DD-42BA-A64D-22B97291E518}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A52E99D-F7F2-4644-8751-A94426DC96CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A52E99D-F7F2-4644-8751-A94426DC96CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A52E99D-F7F2-4644-8751-A94426DC96CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A52E99D-F7F2-4644-8751-A94426DC96CE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

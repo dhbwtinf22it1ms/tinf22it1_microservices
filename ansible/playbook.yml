@@ -1,0 +1,332 @@
+---
+# Ansible playbook to deploy Dhbw.ThesisManager application on Ubuntu
+- name: Deploy Dhbw.ThesisManager Application
+  hosts: all
+  become: true
+  vars:
+    app_name: thesismanager
+    app_user: thesismanager
+    app_group: thesismanager
+    app_base_dir: /opt/thesismanager
+    dotnet_version: "9.0"
+    postgres_user: thesis_manager
+    postgres_password: thesis_manager
+    postgres_db: thesis_manager
+    rabbitmq_user: thesis_manager
+    rabbitmq_password: thesis_manager
+    keycloak_admin_user: admin
+    keycloak_admin_password: admin
+    keycloak_version: "26.1"
+    keycloak_port: 8080
+    smtp_host: localhost
+    smtp_port: 25
+    notification_email: admin@thesismanager.local
+
+  tasks:
+    # Update package lists
+    - name: Update apt package lists
+      apt:
+        update_cache: yes
+
+    # Install required packages
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - unzip
+          - nginx
+        state: present
+
+    # Add Microsoft package repository for .NET
+    - name: Add Microsoft package repository
+      shell: |
+        wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+        dpkg -i packages-microsoft-prod.deb
+        rm packages-microsoft-prod.deb
+      args:
+        creates: /etc/apt/sources.list.d/microsoft-prod.list
+
+    # Install .NET SDK and runtime
+    - name: Install .NET SDK and runtime
+      apt:
+        name:
+          - dotnet-sdk-{{ dotnet_version }}
+          - aspnetcore-runtime-{{ dotnet_version }}
+        update_cache: yes
+        state: present
+
+    # Install PostgreSQL
+    - name: Install PostgreSQL
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+          - libpq-dev
+        state: present
+
+    # Start and enable PostgreSQL service
+    - name: Start and enable PostgreSQL service
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    # Create PostgreSQL user and database
+    - name: Create PostgreSQL user
+      become: true
+      become_user: postgres
+      postgresql_user:
+        name: "{{ postgres_user }}"
+        password: "{{ postgres_password }}"
+        role_attr_flags: CREATEDB,LOGIN
+        state: present
+
+    - name: Create PostgreSQL database
+      become: true
+      become_user: postgres
+      postgresql_db:
+        name: "{{ postgres_db }}"
+        owner: "{{ postgres_user }}"
+        state: present
+
+    # Install RabbitMQ
+    - name: Add RabbitMQ signing key
+      apt_key:
+        url: https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc
+        state: present
+
+    - name: Add RabbitMQ repository
+      apt_repository:
+        repo: deb https://dl.bintray.com/rabbitmq/debian {{ ansible_distribution_release }} main
+        state: present
+        filename: rabbitmq
+
+    - name: Install RabbitMQ
+      apt:
+        name: rabbitmq-server
+        update_cache: yes
+        state: present
+
+    - name: Start and enable RabbitMQ service
+      systemd:
+        name: rabbitmq-server
+        state: started
+        enabled: yes
+
+    # Configure RabbitMQ user
+    - name: Create RabbitMQ user
+      rabbitmq_user:
+        user: "{{ rabbitmq_user }}"
+        password: "{{ rabbitmq_password }}"
+        vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        tags: administrator
+        state: present
+
+    # Install Keycloak
+    - name: Create Keycloak directory
+      file:
+        path: /opt/keycloak
+        state: directory
+        mode: '0755'
+
+    - name: Download Keycloak
+      get_url:
+        url: "https://github.com/keycloak/keycloak/releases/download/{{ keycloak_version }}/keycloak-{{ keycloak_version }}.tar.gz"
+        dest: /tmp/keycloak.tar.gz
+
+    - name: Extract Keycloak
+      unarchive:
+        src: /tmp/keycloak.tar.gz
+        dest: /opt
+        remote_src: yes
+        creates: "/opt/keycloak-{{ keycloak_version }}"
+
+    - name: Create symbolic link for Keycloak
+      file:
+        src: "/opt/keycloak-{{ keycloak_version }}"
+        dest: /opt/keycloak
+        state: link
+
+    # Create application user and group
+    - name: Create application group
+      group:
+        name: "{{ app_group }}"
+        state: present
+
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        shell: /bin/bash
+        home: "/home/{{ app_user }}"
+        createhome: yes
+        state: present
+
+    # Create application directories
+    - name: Create application directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      with_items:
+        - "{{ app_base_dir }}"
+        - "{{ app_base_dir }}/api"
+        - "{{ app_base_dir }}/notification"
+        - "{{ app_base_dir }}/setup"
+        - "{{ app_base_dir }}/keycloak"
+        - "/var/log/{{ app_name }}"
+
+    # Copy Keycloak configuration files
+    - name: Copy Keycloak configuration files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ app_base_dir }}/keycloak/{{ item.dest }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+      with_items:
+        - { src: "keycloak/thesis-management-realm.json", dest: "thesis-management-realm.json" }
+        - { src: "keycloak/thesis-management-users-0.json", dest: "thesis-management-users-0.json" }
+
+    # Create API appsettings.json
+    - name: Create API appsettings.json
+      template:
+        src: templates/api-appsettings.json.j2
+        dest: "{{ app_base_dir }}/api/appsettings.json"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    # Create NotificationService appsettings.json
+    - name: Create NotificationService appsettings.json
+      template:
+        src: templates/notification-appsettings.json.j2
+        dest: "{{ app_base_dir }}/notification/appsettings.json"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    # Create Setup appsettings.json
+    - name: Create Setup appsettings.json
+      template:
+        src: templates/setup-appsettings.json.j2
+        dest: "{{ app_base_dir }}/setup/appsettings.json"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    # Copy application files
+    - name: Copy API files
+      copy:
+        src: "src/dotnet/Dhbw.ThesisManager/Dhbw.ThesisManager.Api/bin/Release/net9.0/publish/"
+        dest: "{{ app_base_dir }}/api/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+    - name: Copy NotificationService files
+      copy:
+        src: "src/dotnet/Dhbw.ThesisManager/Dhbw.ThesisManager.NotificationService/bin/Release/net9.0/publish/"
+        dest: "{{ app_base_dir }}/notification/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+    - name: Copy Setup files
+      copy:
+        src: "src/dotnet/Dhbw.ThesisManager/Setup/bin/Release/net9.0/publish/"
+        dest: "{{ app_base_dir }}/setup/"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+    # Create systemd service files
+    - name: Create Keycloak service file
+      template:
+        src: templates/keycloak.service.j2
+        dest: /etc/systemd/system/keycloak.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create API service file
+      template:
+        src: templates/thesismanager-api.service.j2
+        dest: /etc/systemd/system/thesismanager-api.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create NotificationService service file
+      template:
+        src: templates/thesismanager-notification.service.j2
+        dest: /etc/systemd/system/thesismanager-notification.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    # Configure Nginx
+    - name: Create Nginx configuration
+      template:
+        src: templates/nginx-thesismanager.conf.j2
+        dest: /etc/nginx/sites-available/thesismanager
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable Nginx site
+      file:
+        src: /etc/nginx/sites-available/thesismanager
+        dest: /etc/nginx/sites-enabled/thesismanager
+        state: link
+
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    # Run database migrations
+    - name: Run database migrations
+      become: true
+      become_user: "{{ app_user }}"
+      command: "dotnet {{ app_base_dir }}/setup/Setup.dll"
+      args:
+        chdir: "{{ app_base_dir }}/setup"
+
+    # Reload systemd and start services
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Start and enable Keycloak service
+      systemd:
+        name: keycloak
+        state: started
+        enabled: yes
+
+    - name: Start and enable API service
+      systemd:
+        name: thesismanager-api
+        state: started
+        enabled: yes
+
+    - name: Start and enable NotificationService service
+      systemd:
+        name: thesismanager-notification
+        state: started
+        enabled: yes
+
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes

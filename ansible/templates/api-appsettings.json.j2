@@ -1,0 +1,23 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database={{ postgres_db }};Username={{ postgres_user }};Password={{ postgres_password }}"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Keycloak": {
+    "realm": "thesis-management",
+    "auth-server-url": "http://localhost:{{ keycloak_port }}/",
+    "ssl-required": "none",
+    "resource": "thesis-manager-client",
+    "verify-token-audience": false,
+    "credentials": {
+      "secret": "your-client-secret"
+    },
+    "confidential-port": 0
+  }
+}

@@ -1,0 +1,98 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: thesis_manager
+      POSTGRES_PASSWORD: thesis_manager
+      POSTGRES_DB: thesis_manager
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U thesis_manager -d thesis_manager"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD : admin
+    command: >
+      start-dev
+      --import-realm
+    volumes:
+      - ../keycloak:/opt/keycloak/data/import
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: thesis_manager
+      RABBITMQ_DEFAULT_PASS: thesis_manager
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  setup:
+    build:
+      context: .
+      dockerfile: Dhbw.ThesisManager/Setup/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=thesis_manager;Username=thesis_manager;Password=thesis_manager
+    restart: "no"
+
+  # notification:
+  #   build:
+  #     context: .
+  #     dockerfile: Dhbw.ThesisManager/Dhbw.ThesisManager.NotificationService/Dockerfile
+  #   depends_on:
+  #     - rabbitmq
+  #     - smtp4dev
+  #   environment:
+  #     - RabbitMq__Host=rabbitmq
+  #     - RabbitMq__Username=thesis_manager
+  #     - RabbitMq__Password=thesis_manager
+  #     - Smtp__Host=smtp4dev
+  #     - Smtp__Port=25
+  #     - Notification__NotificationRecipients__0=admin@thesismanager.local
+  #   restart: unless-stopped
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    ports:
+      - "3000:80"    # Web Interface
+      - "25:25"      # SMTP
+      - "143:143"    # IMAP
+    volumes:
+      - smtp4dev_data:/smtp4dev
+    restart: unless-stopped
+    environment:
+      - ServerOptions__HostName=smtp4dev
+      - ServerOptions__Database=database.db
+      - ServerOptions__NumberOfMessagesToKeep=100
+      - ServerOptions__NumberOfSessionsToKeep=50
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  smtp4dev_data:
