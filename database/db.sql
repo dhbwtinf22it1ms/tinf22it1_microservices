@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS "comments" (
 	"thesisId" INTEGER NOT NULL,
 	"author" UUID NOT NULL,
 	"msg" TEXT NOT NULL,
-	"createdAt" TIME NOT NULL,
+	"createdAt" TIMESTAMPTZ NOT NULL,
 	PRIMARY KEY ("commentId"),
 	CONSTRAINT "FK__Thesis" FOREIGN KEY ("thesisId") REFERENCES "thesis" ("thesisId") ON UPDATE NO ACTION ON DELETE NO ACTION
 );
