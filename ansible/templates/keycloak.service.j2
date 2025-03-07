@@ -1,0 +1,20 @@
+[Unit]
+Description=Keycloak Authentication Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory=/opt/keycloak/bin
+Environment="KEYCLOAK_ADMIN={{ keycloak_admin_user }}"
+Environment="KEYCLOAK_ADMIN_PASSWORD={{ keycloak_admin_password }}"
+ExecStart=/opt/keycloak/bin/kc.sh start-dev --import-realm --http-port={{ keycloak_port }}
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=keycloak
+
+[Install]
+WantedBy=multi-user.target

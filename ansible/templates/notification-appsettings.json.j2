@@ -1,0 +1,25 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "Smtp": {
+    "Host": "{{ smtp_host }}",
+    "Port": {{ smtp_port }},
+    "UseSsl": false,
+    "FromAddress": "noreply@thesismanager.local",
+    "FromName": "Thesis Manager"
+  },
+  "RabbitMq": {
+    "Host": "localhost",
+    "Username": "{{ rabbitmq_user }}",
+    "Password": "{{ rabbitmq_password }}"
+  },
+  "Notification": {
+    "NotificationRecipients": [
+      "{{ notification_email }}"
+    ]
+  }
+}

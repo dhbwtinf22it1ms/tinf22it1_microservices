@@ -1,0 +1,19 @@
+[Unit]
+Description=Thesis Manager Notification Service
+After=network.target rabbitmq-server.service
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_base_dir }}/notification
+ExecStart=/usr/bin/dotnet {{ app_base_dir }}/notification/Dhbw.ThesisManager.NotificationService.dll
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=thesismanager-notification
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target

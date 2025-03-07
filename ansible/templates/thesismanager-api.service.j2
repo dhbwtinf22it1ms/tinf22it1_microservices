@@ -1,0 +1,20 @@
+[Unit]
+Description=Thesis Manager API Service
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_base_dir }}/api
+ExecStart=/usr/bin/dotnet {{ app_base_dir }}/api/Dhbw.ThesisManager.Api.dll
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=thesismanager-api
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target
