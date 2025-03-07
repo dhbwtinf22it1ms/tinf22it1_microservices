@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "thesis" (
 	"operationalLocationCity" VARCHAR NOT NULL,
 	"operationalLocationCountry" VARCHAR NOT NULL,
 	"inCompanySupervisorAcademicTitle" VARCHAR NULL DEFAULT NULL,
-	"inCompanySupervisorTitle" VARCHAR NULL DEFAULT NULL,
+	"inCompanySupervisorTitle" VARCHAR NOT NULL,
 	"inCompanySupervisorFirstName" VARCHAR NOT NULL,
 	"inCompanySupervisorLastName" VARCHAR NOT NULL,
 	"inCompanySupervisorEmail" VARCHAR NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "thesis" (
 	"inCompanySupervisorAcademicDegree" VARCHAR NOT NULL,
 	"preparationPeriodBegin" DATE NOT NULL,
 	"preparationPeriodEnd" DATE NOT NULL,
-	"excludedCompanies" VARCHAR NOT NULL,
+	"excludedCompanies" VARCHAR NULL DEFAULT NULL,
 	PRIMARY KEY ("thesisId"),
 	UNIQUE ("studentId")
 );
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS "thesis" (
 CREATE TABLE IF NOT EXISTS "comments" (
 	"commentId" SERIAL NOT NULL,
 	"thesisId" INTEGER NOT NULL,
-	"author" INTEGER NOT NULL,
+	"author" UUID NOT NULL,
 	"msg" TEXT NOT NULL,
 	"createdAt" TIME NOT NULL,
 	PRIMARY KEY ("commentId"),
