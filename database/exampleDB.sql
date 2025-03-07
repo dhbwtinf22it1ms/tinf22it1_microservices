@@ -2,4 +2,4 @@ INSERT INTO "thesis" ("thesisId", "topic", "studentId", "studentFirstName", "stu
 INSERT INTO "public"."comments" ("thesisId", "author", "msg", "createdAt") VALUES (7, '04859073-587a-4979-8d32-2023eec36515', 'Very nice concept.
 I like Money.
 
-Can I supervise you?', '11:04:58');
+Can I supervise you?', '2025-03-07 11:41:07+01');
