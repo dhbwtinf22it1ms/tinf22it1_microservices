@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct UserId(pub u32);
+pub struct UserId(pub Uuid);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct ThesisId(pub u32);
@@ -18,7 +19,7 @@ pub struct Thesis {
     pub partner_company: ThesisPartnerCompany,
     pub operational_location: ThesisOperationalLocation,
     pub in_company_supervisor: ThesisInCompanySupervisor,
-    pub exclude_supervisors_from_companies: Vec<String>,
+    pub exclude_supervisors_from_companies: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

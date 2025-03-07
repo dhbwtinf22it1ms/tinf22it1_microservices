@@ -1,4 +1,6 @@
+
 use diesel::{prelude::AsChangeset, Queryable, Selectable};
+use uuid::Uuid;
 
 #[derive(Selectable, Queryable, AsChangeset)]
 #[diesel(table_name = super::schema::thesis)]
@@ -6,20 +8,30 @@ use diesel::{prelude::AsChangeset, Queryable, Selectable};
 pub struct Thesis {
     pub id: i32,
     pub topic: String,
-    pub student_id: i32,
-    pub company_id: i32,
-    pub operational_location_department: i32,
-    pub operational_location_street: String,
-    pub operational_location_zipcode: i32,
-    pub operational_location_city: String,
-    pub operational_location_country: String,
-    pub in_company_supervisor_title: Option<String>,
-    pub in_company_supervisor_academic_title: Option<String>,
-    pub in_company_supervisor_first_name: String,
-    pub in_company_supervisor_last_name: String,
-    pub in_company_supervisor_email: String,
-    pub in_company_supervisor_phone_number: String,
-    pub in_company_supervisor_academic_degree: String,
-    pub preparation_period_begin: chrono::NaiveDate,
-    pub preparation_period_end: chrono::NaiveDate,
+    pub studentId: Uuid,
+    pub studentFirstName: String,
+    pub studentLastName: String,
+    pub studentTitle: String,
+    pub studentRegistrationNumber: String,
+    pub studentCourse: String,
+    pub companyStreet: String,
+    pub companyZipcode: i32,
+    pub companyCity: String,
+    pub companyName: String,
+    pub companyCountry: String,
+    pub operationalLocationDepartment: String,
+    pub operationalLocationStreet: String,
+    pub operationalLocationZipcode: i32,
+    pub operationalLocationCity: String,
+    pub operationalLocationCountry: String,
+    pub inCompanySupervisorAcademicTitle: Option<String>,
+    pub inCompanySupervisorTitle: Option<String>,
+    pub inCompanySupervisorFirstName: String,
+    pub inCompanySupervisorLastName: String,
+    pub inCompanySupervisorEmail: String,
+    pub inCompanySupervisorPhoneNumber: String,
+    pub inCompanySupervisorAcademicDegree: String,
+    pub preparationPeriodBegin: chrono::NaiveDate,
+    pub preparationPeriodEnd: chrono::NaiveDate,
+    pub excludedCompanies: String,
 }

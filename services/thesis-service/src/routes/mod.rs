@@ -1,13 +1,11 @@
-use std::borrow::Cow;
-
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     routing::get,
     Json, Router,
 };
-use serde::de::Expected;
 use tracing::warn;
+use uuid::Uuid;
 
 use crate::{
     database::{self, DatabaseError},
@@ -42,8 +40,18 @@ async fn create_thesis(
     let mut database_connection = state.database_pool.get().unwrap();
 
     // TODO retrieve student from current JWT and perform authorization
-    payload.student.id = Some(UserId(999));
-    warn!("No authentication yet, using student id 999 for new thesis");
+    let student_id = UserId(Uuid::from_u128(999));
+    warn!("No authentication yet, using hardcoded student id for new thesis");
+
+    if payload.id.is_some() {
+        return ApiResult::new_error(StatusCode::UNPROCESSABLE_ENTITY, "payload must not contain a thesis id");
+    }
+
+    if payload.student.id.is_some() {
+        return ApiResult::new_error(StatusCode::UNPROCESSABLE_ENTITY, "payload must not contain a student id");
+    }
+
+    payload.student.id = Some(student_id);
 
     let created_thesis = match database::create_thesis(&mut database_connection, payload) {
         Ok(t) => t,
@@ -62,13 +70,13 @@ async fn create_thesis(
 
 async fn get_my_thesis(State(state): State<AppState>) -> ApiResult<Thesis> {
     warn!("No authentication yet, using student id 999 for get_my_thesis");
-    let student_id = UserId(999);
+    let student_id = UserId(Uuid::from_u128(999));
 
     let mut connection = state.database_pool.get().unwrap();
 
     match database::get_thesis_by_student_id(&mut connection, student_id) {
         Ok(thesis) => ApiResult::new_success(StatusCode::OK, thesis),
-        Err(DatabaseError::NotFound) => return ApiResult::new_error(StatusCode::NOT_FOUND, "you do not have a thesis yet"),
+        Err(DatabaseError::NotFound) => ApiResult::new_error(StatusCode::NOT_FOUND, "you do not have a thesis yet"),
         Err(other)  => panic!("unexpected database error: {other}"),
     }
 }
@@ -77,8 +85,8 @@ async fn update_my_thesis(
     State(state): State<AppState>,
     Json(mut payload): Json<Thesis>,
 ) -> ApiResult<Thesis> {
-    warn!("No authentication yet, using student id 999 for get_my_thesis");
-    let student_id = UserId(999);
+    warn!("No authentication yet, using hardcoded student id for update_my_thesis");
+    let student_id = UserId(Uuid::from_u128(999));
     let mut connection = state.database_pool.get().unwrap();
 
     if payload.id.is_some() {
