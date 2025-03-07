@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Dhbw.ThesisManager.NotificationService": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

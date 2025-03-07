@@ -1,0 +1,801 @@
+@page "/my-thesis"
+@using Newtonsoft.Json
+@using System.Text
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "student")]
+
+<h3>My Bachelor Thesis</h3>
+
+@if (_isLoading)
+{
+    <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_loadError != null)
+{
+    <div class="alert alert-info">
+        <h4>No Thesis Found</h4>
+        <p>@_loadError</p>
+        <button class="btn btn-primary" @onclick="ShowCreateForm">Create New Thesis</button>
+    </div>
+}
+else if (_thesis != null)
+{
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Thesis Details</h5>
+                    <button class="btn btn-sm btn-primary" @onclick="ToggleEditMode">
+                        @(_isEditMode ? "Cancel" : "Edit")
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (_isEditMode)
+                    {
+                        <EditForm Model="@_thesis" OnValidSubmit="SaveThesis">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="mb-3">
+                                <label class="form-label">Topic</label>
+                                <InputText @bind-Value="_thesis.Topic" class="form-control" />
+                            </div>
+
+                            <h5 class="mt-4">Student Information</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">First Name</label>
+                                    <InputText @bind-Value="_thesis.Student.FirstName" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Last Name</label>
+                                    <InputText @bind-Value="_thesis.Student.LastName" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Registration Number</label>
+                                    <InputText @bind-Value="_thesis.Student.RegistrationNumber" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Course</label>
+                                    <InputText @bind-Value="_thesis.Student.Course" class="form-control" />
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4">Preparation Period</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">From</label>
+                                    <InputDate @bind-Value="_preparationPeriodFrom" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">To</label>
+                                    <InputDate @bind-Value="_preparationPeriodTo" class="form-control" />
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4">Partner Company</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Company Name</label>
+                                <InputText @bind-Value="_thesis.PartnerCompany.Name" class="form-control" />
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Street</label>
+                                    <InputText @bind-Value="_thesis.PartnerCompany.Address.Street" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Zip Code</label>
+                                    <InputNumber @bind-Value="_thesis.PartnerCompany.Address.ZipCode" class="form-control" />
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">City</label>
+                                    <InputText @bind-Value="_thesis.PartnerCompany.Address.City" class="form-control" />
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4">Operational Location</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    <InputText @bind-Value="_thesis.OperationalLocation.CompanyName" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Department</label>
+                                    <InputText @bind-Value="_thesis.OperationalLocation.Department" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Street</label>
+                                <InputText @bind-Value="_thesis.OperationalLocation.Address.Street" class="form-control" />
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Zip Code</label>
+                                    <InputNumber @bind-Value="_thesis.OperationalLocation.Address.ZipCode" class="form-control" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">City</label>
+                                    <InputText @bind-Value="_thesis.OperationalLocation.Address.City" class="form-control" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Country</label>
+                                    <InputText @bind-Value="_thesis.OperationalLocation.Address.Country" class="form-control" />
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4">In-Company Supervisor</h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Title</label>
+                                    <InputText @bind-Value="_thesis.InCompanySupervisor.Title" class="form-control" />
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">Academic Title</label>
+                                    <InputText @bind-Value="_thesis.InCompanySupervisor.AcademicTitle" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">First Name</label>
+                                    <InputText @bind-Value="_thesis.InCompanySupervisor.FirstName" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Last Name</label>
+                                    <InputText @bind-Value="_thesis.InCompanySupervisor.LastName" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email</label>
+                                    <InputText @bind-Value="_thesis.InCompanySupervisor.Email" class="form-control" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <InputText @bind-Value="_thesis.InCompanySupervisor.PhoneNumber" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Academic Degree</label>
+                                <InputText @bind-Value="_thesis.InCompanySupervisor.AcademicDegree" class="form-control" />
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="button" class="btn btn-secondary me-2" @onclick="ToggleEditMode">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <h4 class="mb-3">@_thesis.Topic</h4>
+
+                        <h5 class="mt-4">Student Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> @_thesis.Student.FirstName @_thesis.Student.LastName</p>
+                                <p><strong>Registration Number:</strong> @_thesis.Student.RegistrationNumber</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Course:</strong> @_thesis.Student.Course</p>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Preparation Period</h5>
+                        <p><strong>From:</strong> @(DateTime.TryParse(_thesis.PreparationPeriod?.From, out var fromDate) ? fromDate.ToShortDateString() : "Not set")</p>
+                        <p><strong>To:</strong> @(DateTime.TryParse(_thesis.PreparationPeriod?.To, out var toDate) ? toDate.ToShortDateString() : "Not set")</p>
+
+                        <h5 class="mt-4">Partner Company</h5>
+                        <p><strong>Name:</strong> @_thesis.PartnerCompany?.Name</p>
+                        <p><strong>Address:</strong> @_thesis.PartnerCompany?.Address?.Street, @_thesis.PartnerCompany?.Address?.ZipCode @_thesis.PartnerCompany?.Address?.City</p>
+
+                        <h5 class="mt-4">Operational Location</h5>
+                        <p><strong>Company:</strong> @_thesis.OperationalLocation?.CompanyName</p>
+                        <p><strong>Department:</strong> @_thesis.OperationalLocation?.Department</p>
+                        <p><strong>Address:</strong> @_thesis.OperationalLocation?.Address?.Street, @_thesis.OperationalLocation?.Address?.ZipCode @_thesis.OperationalLocation?.Address?.City, @_thesis.OperationalLocation?.Address?.Country</p>
+
+                        <h5 class="mt-4">In-Company Supervisor</h5>
+                        <p><strong>Name:</strong> @_thesis.InCompanySupervisor?.Title @_thesis.InCompanySupervisor?.AcademicTitle @_thesis.InCompanySupervisor?.FirstName @_thesis.InCompanySupervisor?.LastName</p>
+                        <p><strong>Contact:</strong> @_thesis.InCompanySupervisor?.Email | @_thesis.InCompanySupervisor?.PhoneNumber</p>
+                        <p><strong>Academic Degree:</strong> @_thesis.InCompanySupervisor?.AcademicDegree</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Comments</h5>
+                </div>
+                <div class="card-body">
+                    @if (_isLoadingComments)
+                    {
+                        <div class="d-flex justify-content-center my-3">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading comments...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (_comments == null || !_comments.Any())
+                    {
+                        <p class="text-muted">No comments yet.</p>
+                    }
+                    else
+                    {
+                        <div class="comments-list">
+                            @foreach (var comment in _comments)
+                            {
+                                <div class="comment mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>User #@comment.Author</strong>
+                                        <small class="text-muted">@(comment.CreatedAt?.ToString("g") ?? "Unknown date")</small>
+                                    </div>
+                                    <p class="mb-0 mt-2">@comment.Message</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="mt-4">
+                        <h6>Add Comment</h6>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" @bind="_newCommentText" placeholder="Write your comment here..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" @onclick="AddComment" disabled="@(string.IsNullOrWhiteSpace(_newCommentText) || _isAddingComment)">
+                            @if (_isAddingComment)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span> Posting...</span>
+                            }
+                            else
+                            {
+                                <span>Post Comment</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (_isCreateMode)
+{
+    <div class="card">
+        <div class="card-header">
+            <h5>Create New Thesis</h5>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@_newThesis" OnValidSubmit="CreateThesis">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Topic</label>
+                    <InputText @bind-Value="_newThesis.Topic" class="form-control" />
+                </div>
+
+                <h5 class="mt-4">Student Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name</label>
+                        <InputText @bind-Value="_newThesis.Student.FirstName" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name</label>
+                        <InputText @bind-Value="_newThesis.Student.LastName" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Registration Number</label>
+                        <InputText @bind-Value="_newThesis.Student.RegistrationNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Course</label>
+                        <InputText @bind-Value="_newThesis.Student.Course" class="form-control" />
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Preparation Period</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">From</label>
+                        <InputDate @bind-Value="_newPreparationPeriodFrom" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">To</label>
+                        <InputDate @bind-Value="_newPreparationPeriodTo" class="form-control" />
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Partner Company</h5>
+                <div class="mb-3">
+                    <label class="form-label">Company Name</label>
+                    <InputText @bind-Value="_newThesis.PartnerCompany.Name" class="form-control" />
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Street</label>
+                        <InputText @bind-Value="_newThesis.PartnerCompany.Address.Street" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Zip Code</label>
+                        <InputNumber @bind-Value="_newThesis.PartnerCompany.Address.ZipCode" class="form-control" />
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">City</label>
+                        <InputText @bind-Value="_newThesis.PartnerCompany.Address.City" class="form-control" />
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Operational Location</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Company Name</label>
+                        <InputText @bind-Value="_newThesis.OperationalLocation.CompanyName" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Department</label>
+                        <InputText @bind-Value="_newThesis.OperationalLocation.Department" class="form-control" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Street</label>
+                    <InputText @bind-Value="_newThesis.OperationalLocation.Address.Street" class="form-control" />
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Zip Code</label>
+                        <InputNumber @bind-Value="_newThesis.OperationalLocation.Address.ZipCode" class="form-control" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">City</label>
+                        <InputText @bind-Value="_newThesis.OperationalLocation.Address.City" class="form-control" />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Country</label>
+                        <InputText @bind-Value="_newThesis.OperationalLocation.Address.Country" class="form-control" />
+                    </div>
+                </div>
+
+                <h5 class="mt-4">In-Company Supervisor</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Title</label>
+                        <InputText @bind-Value="_newThesis.InCompanySupervisor.Title" class="form-control" />
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">Academic Title</label>
+                        <InputText @bind-Value="_newThesis.InCompanySupervisor.AcademicTitle" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name</label>
+                        <InputText @bind-Value="_newThesis.InCompanySupervisor.FirstName" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name</label>
+                        <InputText @bind-Value="_newThesis.InCompanySupervisor.LastName" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <InputText @bind-Value="_newThesis.InCompanySupervisor.Email" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <InputText @bind-Value="_newThesis.InCompanySupervisor.PhoneNumber" class="form-control" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Academic Degree</label>
+                    <InputText @bind-Value="_newThesis.InCompanySupervisor.AcademicDegree" class="form-control" />
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="button" class="btn btn-secondary me-2" @onclick="CancelCreate">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Thesis</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private Thesis _thesis;
+    private Thesis _newThesis = CreateEmptyThesis();
+    private List<Comment> _comments = new();
+    private bool _isLoading = true;
+    private bool _isLoadingComments = false;
+    private bool _isEditMode = false;
+    private bool _isCreateMode = false;
+    private string _loadError;
+    private string _newCommentText = string.Empty;
+    private bool _isAddingComment = false;
+    private DateTime? _preparationPeriodFrom;
+    private DateTime? _preparationPeriodTo;
+    private DateTime? _newPreparationPeriodFrom = DateTime.Today;
+    private DateTime? _newPreparationPeriodTo = DateTime.Today.AddMonths(3);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadThesis();
+    }
+
+    private HttpClient AuthClient => HttpClientFactory.CreateClient("API");
+
+    private async Task LoadThesis()
+    {
+        try
+        {
+            _isLoading = true;
+            var response = await AuthClient.GetAsync("api/v0/theses/mine");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var thesisResponse = JsonConvert.DeserializeObject<ThesisResponse>(content);
+                _thesis = thesisResponse?.Ok;
+
+                if (_thesis?.PreparationPeriod != null)
+                {
+                    if (DateTime.TryParse(_thesis.PreparationPeriod.From, out var fromDate))
+                    {
+                        _preparationPeriodFrom = fromDate;
+                    }
+
+                    if (DateTime.TryParse(_thesis.PreparationPeriod.To, out var toDate))
+                    {
+                        _preparationPeriodTo = toDate;
+                    }
+                }
+
+                await LoadComments(_thesis.Id);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _loadError = "You don't have a thesis yet. Create one to get started.";
+                _thesis = null;
+            }
+            else
+            {
+                _loadError = $"Error loading thesis: {response.StatusCode}";
+                _thesis = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _loadError = $"Exception loading thesis: {ex.Message}";
+            _thesis = null;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadComments(long thesisId)
+    {
+        try
+        {
+            _isLoadingComments = true;
+            var response = await AuthClient.GetAsync($"api/v0/theses/{thesisId}/comments");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var commentsResponse = JsonConvert.DeserializeObject<CommentListResponse>(content);
+                _comments = commentsResponse?.Ok ?? new List<Comment>();
+            }
+            else
+            {
+                Console.WriteLine($"Error loading comments: {response.StatusCode}");
+                _comments = new List<Comment>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading comments: {ex.Message}");
+            _comments = new List<Comment>();
+        }
+        finally
+        {
+            _isLoadingComments = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleEditMode()
+    {
+        _isEditMode = !_isEditMode;
+    }
+
+    private void ShowCreateForm()
+    {
+        _isCreateMode = true;
+        _newThesis = CreateEmptyThesis();
+        _newPreparationPeriodFrom = DateTime.Today;
+        _newPreparationPeriodTo = DateTime.Today.AddMonths(3);
+    }
+
+    private void CancelCreate()
+    {
+        _isCreateMode = false;
+    }
+
+    private async Task SaveThesis()
+    {
+        try
+        {
+            // Update preparation period dates
+            if (_preparationPeriodFrom.HasValue && _preparationPeriodTo.HasValue)
+            {
+                _thesis.PreparationPeriod = new PreparationPeriod
+                {
+                    From = _preparationPeriodFrom.Value.ToString("yyyy-MM-dd"),
+                    To = _preparationPeriodTo.Value.ToString("yyyy-MM-dd")
+                };
+            }
+
+            var content = new StringContent(
+                JsonConvert.SerializeObject(_thesis),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await AuthClient.PutAsync("api/v0/theses/mine", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var thesisResponse = JsonConvert.DeserializeObject<ThesisResponse>(responseContent);
+                _thesis = thesisResponse?.Ok;
+                _isEditMode = false;
+            }
+            else
+            {
+                Console.WriteLine($"Error updating thesis: {response.StatusCode}");
+                // Show error message
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception updating thesis: {ex.Message}");
+            // Show error message
+        }
+    }
+
+    private async Task CreateThesis()
+    {
+        try
+        {
+            // Update preparation period dates
+            if (_newPreparationPeriodFrom.HasValue && _newPreparationPeriodTo.HasValue)
+            {
+                _newThesis.PreparationPeriod = new PreparationPeriod
+                {
+                    From = _newPreparationPeriodFrom.Value.ToString("yyyy-MM-dd"),
+                    To = _newPreparationPeriodTo.Value.ToString("yyyy-MM-dd")
+                };
+            }
+
+            var content = new StringContent(
+                JsonConvert.SerializeObject(_newThesis),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await AuthClient.PostAsync("api/v0/theses", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _isCreateMode = false;
+                await LoadThesis();
+            }
+            else
+            {
+                Console.WriteLine($"Error creating thesis: {response.StatusCode}");
+                // Show error message
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception creating thesis: {ex.Message}");
+            // Show error message
+        }
+    }
+
+    private async Task AddComment()
+    {
+        if (string.IsNullOrWhiteSpace(_newCommentText) || _thesis == null)
+            return;
+
+        try
+        {
+            _isAddingComment = true;
+
+            var comment = new Comment
+            {
+                Author = 0, // This will be set by the backend based on the authenticated user
+                Message = _newCommentText
+            };
+
+            var content = new StringContent(
+                JsonConvert.SerializeObject(comment),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await AuthClient.PostAsync($"api/v0/theses/{_thesis.Id}/comments", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _newCommentText = string.Empty;
+                await LoadComments(_thesis.Id);
+            }
+            else
+            {
+                Console.WriteLine($"Error adding comment: {response.StatusCode}");
+                // Show error message
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception adding comment: {ex.Message}");
+            // Show error message
+        }
+        finally
+        {
+            _isAddingComment = false;
+            StateHasChanged();
+        }
+    }
+
+    private static Thesis CreateEmptyThesis()
+    {
+        return new Thesis
+        {
+            Topic = string.Empty,
+            Student = new Student
+            {
+                FirstName = string.Empty,
+                LastName = string.Empty,
+                RegistrationNumber = string.Empty,
+                Course = string.Empty
+            },
+            PreparationPeriod = new PreparationPeriod(),
+            PartnerCompany = new PartnerCompany
+            {
+                Name = string.Empty,
+                Address = new Address
+                {
+                    Street = string.Empty,
+                    City = string.Empty,
+                    ZipCode = 0
+                }
+            },
+            OperationalLocation = new OperationalLocation
+            {
+                CompanyName = string.Empty,
+                Department = string.Empty,
+                Address = new Address2
+                {
+                    Street = string.Empty,
+                    City = string.Empty,
+                    Country = string.Empty,
+                    ZipCode = 0
+                }
+            },
+            InCompanySupervisor = new InCompanySupervisor
+            {
+                Title = string.Empty,
+                AcademicTitle = string.Empty,
+                FirstName = string.Empty,
+                LastName = string.Empty,
+                Email = string.Empty,
+                PhoneNumber = string.Empty,
+                AcademicDegree = string.Empty
+            },
+            ExcludeSupervisorsFromCompanies = new List<string>()
+        };
+    }
+
+    // Response and model classes
+    private class ThesisResponse
+    {
+        public Thesis Ok { get; set; }
+    }
+
+    private class CommentListResponse
+    {
+        public List<Comment> Ok { get; set; }
+    }
+
+    private class Thesis
+    {
+        public long Id { get; set; }
+        public string Topic { get; set; }
+        public Student Student { get; set; }
+        public PreparationPeriod PreparationPeriod { get; set; }
+        public PartnerCompany PartnerCompany { get; set; }
+        public OperationalLocation OperationalLocation { get; set; }
+        public InCompanySupervisor InCompanySupervisor { get; set; }
+        public List<string> ExcludeSupervisorsFromCompanies { get; set; }
+    }
+
+    private class Student
+    {
+        public long Id { get; set; }
+        public string Title { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string Course { get; set; }
+    }
+
+    private class PreparationPeriod
+    {
+        public string From { get; set; }
+        public string To { get; set; }
+    }
+
+    private class PartnerCompany
+    {
+        public string Name { get; set; }
+        public Address Address { get; set; }
+    }
+
+    private class OperationalLocation
+    {
+        public string CompanyName { get; set; }
+        public string Department { get; set; }
+        public Address2 Address { get; set; }
+    }
+
+    private class InCompanySupervisor
+    {
+        public string Title { get; set; }
+        public string AcademicTitle { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string AcademicDegree { get; set; }
+    }
+
+    private class Address
+    {
+        public string Street { get; set; }
+        public int ZipCode { get; set; }
+        public string City { get; set; }
+    }
+
+    private class Address2
+    {
+        public string Street { get; set; }
+        public int ZipCode { get; set; }
+        public string City { get; set; }
+        public string Country { get; set; }
+    }
+
+    private class Comment
+    {
+        public long Author { get; set; }
+        public string Message { get; set; }
+        public DateTime? CreatedAt { get; set; }
+    }
+
+}

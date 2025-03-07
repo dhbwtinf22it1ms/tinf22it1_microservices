@@ -1,0 +1,484 @@
+@page "/theses-list"
+@using Newtonsoft.Json
+@using System.Text
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "supervisor,administrator,secretary")]
+
+<h3>Bachelor Theses List</h3>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search by topic, student name, or company..." 
+                   @bind="_searchTerm" @bind:event="oninput" @onkeyup="HandleSearchKeyUp" />
+            <button class="btn btn-outline-secondary" type="button" @onclick="SearchTheses">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <button class="btn btn-primary" @onclick="LoadTheses">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <div class="d-flex justify-content-center my-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (_theses == null || !_theses.Any())
+{
+    <div class="alert alert-info">
+        <h4>No Theses Found</h4>
+        <p>There are no bachelor theses available at the moment.</p>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-@(_selectedThesis == null ? "12" : "5")">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Theses</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var thesis in _theses)
+                        {
+                            <button type="button" 
+                                    class="list-group-item list-group-item-action @(_selectedThesis?.Id == thesis.Id ? "active" : "")" 
+                                    @onclick="() => SelectThesis(thesis.Id)">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">@thesis.Topic</h5>
+                                </div>
+                                <p class="mb-1">Student: @thesis.Student.FirstName @thesis.Student.LastName</p>
+                                <small>Company: @thesis.PartnerCompany.Name</small>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (_selectedThesis != null)
+        {
+            <div class="col-md-7">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Thesis Details</h5>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => _selectedThesis = null">
+                            <i class="bi bi-x-lg"></i> Close
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <h4 class="mb-3">@_selectedThesis.Topic</h4>
+
+                        <h5 class="mt-4">Student Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> @_selectedThesis.Student.FirstName @_selectedThesis.Student.LastName</p>
+                                <p><strong>Registration Number:</strong> @_selectedThesis.Student.RegistrationNumber</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Course:</strong> @_selectedThesis.Student.Course</p>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Preparation Period</h5>
+                        <p><strong>From:</strong> @(DateTime.TryParse(_selectedThesis.PreparationPeriod?.From, out var fromDate) ? fromDate.ToShortDateString() : "Not set")</p>
+                        <p><strong>To:</strong> @(DateTime.TryParse(_selectedThesis.PreparationPeriod?.To, out var toDate) ? toDate.ToShortDateString() : "Not set")</p>
+
+                        <h5 class="mt-4">Partner Company</h5>
+                        <p><strong>Name:</strong> @_selectedThesis.PartnerCompany?.Name</p>
+                        <p><strong>Address:</strong> @_selectedThesis.PartnerCompany?.Address?.Street, @_selectedThesis.PartnerCompany?.Address?.ZipCode @_selectedThesis.PartnerCompany?.Address?.City</p>
+
+                        <h5 class="mt-4">Operational Location</h5>
+                        <p><strong>Company:</strong> @_selectedThesis.OperationalLocation?.CompanyName</p>
+                        <p><strong>Department:</strong> @_selectedThesis.OperationalLocation?.Department</p>
+                        <p><strong>Address:</strong> @_selectedThesis.OperationalLocation?.Address?.Street, @_selectedThesis.OperationalLocation?.Address?.ZipCode @_selectedThesis.OperationalLocation?.Address?.City, @_selectedThesis.OperationalLocation?.Address?.Country</p>
+
+                        <h5 class="mt-4">In-Company Supervisor</h5>
+                        <p><strong>Name:</strong> @_selectedThesis.InCompanySupervisor?.Title @_selectedThesis.InCompanySupervisor?.AcademicTitle @_selectedThesis.InCompanySupervisor?.FirstName @_selectedThesis.InCompanySupervisor?.LastName</p>
+                        <p><strong>Contact:</strong> @_selectedThesis.InCompanySupervisor?.Email | @_selectedThesis.InCompanySupervisor?.PhoneNumber</p>
+                        <p><strong>Academic Degree:</strong> @_selectedThesis.InCompanySupervisor?.AcademicDegree</p>
+
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Comments</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (_isLoadingComments)
+                                {
+                                    <div class="d-flex justify-content-center my-3">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">Loading comments...</span>
+                                        </div>
+                                    </div>
+                                }
+                                else if (_comments == null || !_comments.Any())
+                                {
+                                    <p class="text-muted">No comments yet.</p>
+                                }
+                                else
+                                {
+                                    <div class="comments-list">
+                                        @foreach (var comment in _comments)
+                                        {
+                                            <div class="comment mb-3 p-3 border rounded">
+                                                <div class="d-flex justify-content-between">
+                                                    <strong>User #@comment.Author</strong>
+                                                    <small class="text-muted">@(comment.CreatedAt?.ToString("g") ?? "Unknown date")</small>
+                                                </div>
+                                                <p class="mb-0 mt-2">@comment.Message</p>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="mt-4">
+                                    <h6>Add Comment</h6>
+                                    <div class="mb-3">
+                                        <textarea class="form-control" rows="3" @bind="_newCommentText" placeholder="Write your comment here..."></textarea>
+                                    </div>
+                                    <button class="btn btn-primary" @onclick="AddComment" disabled="@(string.IsNullOrWhiteSpace(_newCommentText) || _isAddingComment)">
+                                        @if (_isAddingComment)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <span> Posting...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Post Comment</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<ThesisSummary> _theses = new();
+    private Thesis _selectedThesis;
+    private List<Comment> _comments = new();
+    private bool _isLoading = true;
+    private bool _isLoadingComments = false;
+    private string _searchTerm = string.Empty;
+    private string _newCommentText = string.Empty;
+    private bool _isAddingComment = false;
+    private System.Threading.Timer _searchTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTheses();
+    }
+
+    private HttpClient AuthClient => HttpClientFactory.CreateClient("API");
+
+    private async Task LoadTheses()
+    {
+        try
+        {
+            _isLoading = true;
+            var response = await AuthClient.GetAsync("api/v0/theses");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var thesesResponse = JsonConvert.DeserializeObject<ThesesListResponse>(content);
+                _theses = thesesResponse?.Ok ?? new List<ThesisSummary>();
+            }
+            else
+            {
+                Console.WriteLine($"Error loading theses: {response.StatusCode}");
+                _theses = new List<ThesisSummary>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading theses: {ex.Message}");
+            _theses = new List<ThesisSummary>();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchTheses()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            await LoadTheses();
+            return;
+        }
+
+        try
+        {
+            _isLoading = true;
+            var response = await AuthClient.GetAsync($"api/v0/theses?search={Uri.EscapeDataString(_searchTerm)}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var thesesResponse = JsonConvert.DeserializeObject<ThesesListResponse>(content);
+                _theses = thesesResponse?.Ok ?? new List<ThesisSummary>();
+            }
+            else
+            {
+                Console.WriteLine($"Error searching theses: {response.StatusCode}");
+                _theses = new List<ThesisSummary>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception searching theses: {ex.Message}");
+            _theses = new List<ThesisSummary>();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            SearchTheses();
+        }
+        else
+        {
+            // Debounce search
+            _searchTimer?.Dispose();
+            _searchTimer = new System.Threading.Timer(_ =>
+            {
+                InvokeAsync(SearchTheses);
+            }, null, 500, Timeout.Infinite);
+        }
+    }
+
+    private async Task SelectThesis(long thesisId)
+    {
+        try
+        {
+            _isLoading = true;
+            var response = await AuthClient.GetAsync($"api/v0/theses/{thesisId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var thesisResponse = JsonConvert.DeserializeObject<ThesisResponse>(content);
+                _selectedThesis = thesisResponse?.Ok;
+
+                if (_selectedThesis != null)
+                {
+                    await LoadComments(thesisId);
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Error loading thesis details: {response.StatusCode}");
+                _selectedThesis = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading thesis details: {ex.Message}");
+            _selectedThesis = null;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadComments(long thesisId)
+    {
+        try
+        {
+            _isLoadingComments = true;
+            var response = await AuthClient.GetAsync($"api/v0/theses/{thesisId}/comments");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var commentsResponse = JsonConvert.DeserializeObject<CommentListResponse>(content);
+                _comments = commentsResponse?.Ok ?? new List<Comment>();
+            }
+            else
+            {
+                Console.WriteLine($"Error loading comments: {response.StatusCode}");
+                _comments = new List<Comment>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading comments: {ex.Message}");
+            _comments = new List<Comment>();
+        }
+        finally
+        {
+            _isLoadingComments = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddComment()
+    {
+        if (string.IsNullOrWhiteSpace(_newCommentText) || _selectedThesis == null)
+            return;
+
+        try
+        {
+            _isAddingComment = true;
+
+            var comment = new Comment
+            {
+                Author = 0, // This will be set by the backend based on the authenticated user
+                Message = _newCommentText
+            };
+
+            var content = new StringContent(
+                JsonConvert.SerializeObject(comment),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await AuthClient.PostAsync($"api/v0/theses/{_selectedThesis.Id}/comments", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _newCommentText = string.Empty;
+                await LoadComments(_selectedThesis.Id);
+            }
+            else
+            {
+                Console.WriteLine($"Error adding comment: {response.StatusCode}");
+                // Show error message
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception adding comment: {ex.Message}");
+            // Show error message
+        }
+        finally
+        {
+            _isAddingComment = false;
+            StateHasChanged();
+        }
+    }
+
+    // Response and model classes
+    private class ThesesListResponse
+    {
+        public List<ThesisSummary> Ok { get; set; }
+    }
+
+    private class ThesisResponse
+    {
+        public Thesis Ok { get; set; }
+    }
+
+    private class CommentListResponse
+    {
+        public List<Comment> Ok { get; set; }
+    }
+
+    private class ThesisSummary
+    {
+        public long Id { get; set; }
+        public string Topic { get; set; }
+        public Student Student { get; set; }
+        public PartnerCompany PartnerCompany { get; set; }
+    }
+
+    private class Thesis
+    {
+        public long Id { get; set; }
+        public string Topic { get; set; }
+        public Student Student { get; set; }
+        public PreparationPeriod PreparationPeriod { get; set; }
+        public PartnerCompany PartnerCompany { get; set; }
+        public OperationalLocation OperationalLocation { get; set; }
+        public InCompanySupervisor InCompanySupervisor { get; set; }
+        public List<string> ExcludeSupervisorsFromCompanies { get; set; }
+    }
+
+    private class Student
+    {
+        public long Id { get; set; }
+        public string Title { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string RegistrationNumber { get; set; }
+        public string Course { get; set; }
+    }
+
+    private class PreparationPeriod
+    {
+        public string From { get; set; }
+        public string To { get; set; }
+    }
+
+    private class PartnerCompany
+    {
+        public string Name { get; set; }
+        public Address Address { get; set; }
+    }
+
+    private class OperationalLocation
+    {
+        public string CompanyName { get; set; }
+        public string Department { get; set; }
+        public Address2 Address { get; set; }
+    }
+
+    private class InCompanySupervisor
+    {
+        public string Title { get; set; }
+        public string AcademicTitle { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Email { get; set; }
+        public string AcademicDegree { get; set; }
+    }
+
+    private class Address
+    {
+        public string Street { get; set; }
+        public int ZipCode { get; set; }
+        public string City { get; set; }
+    }
+
+    private class Address2
+    {
+        public string Street { get; set; }
+        public int ZipCode { get; set; }
+        public string City { get; set; }
+        public string Country { get; set; }
+    }
+
+    private class Comment
+    {
+        public long Author { get; set; }
+        public string Message { get; set; }
+        public DateTime? CreatedAt { get; set; }
+    }
+}

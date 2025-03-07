@@ -66,5 +66,3 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(Dhbw.ThesisManager.Client._Imports).Assembly);
 
 app.MapControllers();
-
-app.Run();

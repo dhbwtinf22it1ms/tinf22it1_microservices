@@ -1,0 +1,452 @@
+@page "/user-management"
+@using System.Net.Http.Headers
+@using System.Text
+@using Newtonsoft.Json
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IHttpClientFactory HttpClientFactory
+@attribute [Authorize(Roles = "administrator, secretary")]
+
+<h3>User Management</h3>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Upload Users</h5>
+            </div>
+            <div class="card-body">
+                <p>Upload a CSV file with user information to register them in Keycloak.</p>
+                <p>CSV Format: FirstName,LastName,Email,Role</p>
+                <p>Roles: student, supervisor, secretary, administrator</p>
+                
+                <InputFile OnChange="@LoadCSVFile" class="form-control mb-3" accept=".csv" />
+                
+                @if (!string.IsNullOrEmpty(_fileUploadError))
+                {
+                    <div class="alert alert-danger">@_fileUploadError</div>
+                }
+                
+                <button class="btn btn-primary" @onclick="UploadUsers" disabled="@(!_isFileLoaded || _isUploading)">
+                    @if (_isUploading)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span> Uploading...</span>
+                    }
+                    else
+                    {
+                        <span>Upload Users</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>User List</h5>
+                <button class="btn btn-sm btn-primary" @onclick="LoadUsers">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                @if (_isLoading)
+                {
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                }
+                else if (_users == null || !_users.Any())
+                {
+                    <div class="alert alert-info">No users found.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Registration Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in _users)
+                                {
+                                    <tr>
+                                        <td>@user.Id</td>
+                                        <td>@user.FirstName @user.LastName</td>
+                                        <td>@user.Email</td>
+                                        <td>@user.Role</td>
+                                        <td>
+                                            @if (user.RegistrationStatus?.Pending != null)
+                                            {
+                                                <span class="badge bg-warning">Pending</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Registered</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => RegenerateToken(user.Id)">
+                                                    <i class="bi bi-key"></i> Regenerate Token
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(user.Id)">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_showTokenModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registration Token</h5>
+                    <button type="button" class="btn-close" @onclick="CloseTokenModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>A new registration token has been generated and sent to the user's email.</p>
+                    <p>Token: <strong>@_registrationToken</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseTokenModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (_showDeleteConfirmModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteConfirmModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this user?</p>
+                    <p>This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseDeleteConfirmModal">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDeleteUser">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<User> _users = new();
+    private bool _isLoading = true;
+    private bool _isUploading = false;
+    private bool _isFileLoaded = false;
+    private string _fileUploadError = string.Empty;
+    private List<UserCreationRequest> _userCreationRequests = new();
+    private bool _showTokenModal = false;
+    private string _registrationToken = string.Empty;
+    private bool _showDeleteConfirmModal = false;
+    private long _userIdToDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private HttpClient AuthClient => HttpClientFactory.CreateClient("API");
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            _isLoading = true;
+            var response = await AuthClient.GetAsync("api/v0/users");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var userListResponse = JsonConvert.DeserializeObject<UserListResponse>(content);
+                _users = userListResponse?.Ok ?? new List<User>();
+            }
+            else
+            {
+                // Handle error
+                Console.WriteLine($"Error loading users: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading users: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCSVFile(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            _fileUploadError = string.Empty;
+            _isFileLoaded = false;
+            _userCreationRequests.Clear();
+            
+            var file = e.File;
+            if (file == null)
+            {
+                _fileUploadError = "No file selected.";
+                return;
+            }
+
+            if (file.ContentType != "text/csv" && !file.Name.EndsWith(".csv"))
+            {
+                _fileUploadError = "Please upload a CSV file.";
+                return;
+            }
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024); // 1MB max
+            using var reader = new StreamReader(stream);
+            
+            string line;
+            int lineNumber = 0;
+            
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                lineNumber++;
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                
+                var parts = line.Split(',');
+                if (parts.Length < 4)
+                {
+                    _fileUploadError = $"Line {lineNumber} does not have enough columns. Expected format: FirstName,LastName,Email,Role";
+                    _userCreationRequests.Clear();
+                    return;
+                }
+                
+                var firstName = parts[0].Trim();
+                var lastName = parts[1].Trim();
+                var email = parts[2].Trim();
+                var roleStr = parts[3].Trim().ToLower();
+                
+                if (!Enum.TryParse<UserRole>(roleStr, true, out var role))
+                {
+                    _fileUploadError = $"Line {lineNumber} has an invalid role '{roleStr}'. Valid roles are: student, supervisor, secretary, administrator";
+                    _userCreationRequests.Clear();
+                    return;
+                }
+                
+                var user = new User
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    Role = role
+                };
+                
+                var request = new UserCreationRequest
+                {
+                    User = user,
+                    RegistrationToken = Guid.NewGuid().ToString() // Generate a random token
+                };
+                
+                _userCreationRequests.Add(request);
+            }
+            
+            if (_userCreationRequests.Count == 0)
+            {
+                _fileUploadError = "No valid user records found in the CSV file.";
+                return;
+            }
+            
+            _isFileLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            _fileUploadError = $"Error processing file: {ex.Message}";
+            _userCreationRequests.Clear();
+        }
+    }
+
+    private async Task UploadUsers()
+    {
+        if (!_isFileLoaded || _userCreationRequests.Count == 0)
+        {
+            _fileUploadError = "No valid user data to upload.";
+            return;
+        }
+        
+        try
+        {
+            _isUploading = true;
+            
+            var content = new StringContent(
+                JsonConvert.SerializeObject(_userCreationRequests),
+                Encoding.UTF8,
+                "application/json");
+                
+            var response = await AuthClient.PostAsync("api/v0/users", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _fileUploadError = string.Empty;
+                _isFileLoaded = false;
+                _userCreationRequests.Clear();
+                
+                // Reload the user list
+                await LoadUsers();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _fileUploadError = $"Error uploading users: {response.StatusCode} - {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _fileUploadError = $"Exception uploading users: {ex.Message}";
+        }
+        finally
+        {
+            _isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RegenerateToken(long userId)
+    {
+        try
+        {
+            var response = await AuthClient.PostAsync($"api/v0/users/{userId}/regenerate_registration_token", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var tokenResponse = JsonConvert.DeserializeObject<RegistrationTokenResponse>(content);
+                _registrationToken = tokenResponse?.Ok ?? "Token not available";
+                _showTokenModal = true;
+            }
+            else
+            {
+                // Handle error
+                Console.WriteLine($"Error regenerating token: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception regenerating token: {ex.Message}");
+        }
+    }
+
+    private void CloseTokenModal()
+    {
+        _showTokenModal = false;
+        _registrationToken = string.Empty;
+    }
+
+    private void DeleteUser(long userId)
+    {
+        _userIdToDelete = userId;
+        _showDeleteConfirmModal = true;
+    }
+
+    private void CloseDeleteConfirmModal()
+    {
+        _showDeleteConfirmModal = false;
+    }
+
+    private async Task ConfirmDeleteUser()
+    {
+        try
+        {
+            var response = await AuthClient.DeleteAsync($"api/v0/users/{_userIdToDelete}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                // Reload the user list
+                await LoadUsers();
+            }
+            else
+            {
+                // Handle error
+                Console.WriteLine($"Error deleting user: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception deleting user: {ex.Message}");
+        }
+        finally
+        {
+            CloseDeleteConfirmModal();
+        }
+    }
+
+    // Response classes
+    private class UserListResponse
+    {
+        public List<User> Ok { get; set; }
+    }
+
+    private class RegistrationTokenResponse
+    {
+        public string Ok { get; set; }
+    }
+
+    private class UserCreationRequest
+    {
+        public User User { get; set; }
+        public string RegistrationToken { get; set; }
+    }
+
+    private class User
+    {
+        public long Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public UserRole Role { get; set; }
+        public RegistrationStatus RegistrationStatus { get; set; }
+    }
+
+    private class RegistrationStatus
+    {
+        public string Pending { get; set; }
+    }
+
+    private enum UserRole
+    {
+        student,
+        supervisor,
+        secretary,
+        administrator
+    }
+}
