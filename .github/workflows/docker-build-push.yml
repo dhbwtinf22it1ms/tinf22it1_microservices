@@ -85,3 +85,28 @@ jobs:
           labels: ${{ steps.meta-notification.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Extract metadata (tags, labels) for API Service
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_BASE_NAME }}-api
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,format=short
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+  
+      - name: Build and push API Service image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/dotnet
+          file: ./src/dotnet/Dhbw.ThesisManager/Dhbw.ThesisManager.Api/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-notification.outputs.tags }}
+          labels: ${{ steps.meta-notification.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+  
