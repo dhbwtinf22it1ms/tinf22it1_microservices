@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  description: API for managing notifications
+  version: 0.0.1
+servers:
+- url: /notifications/v0
+paths:
+  /deadlinereached:
+    post:
+      summary: Trigger notification for deadline reached
+      description: Send a notification to inform that all thesis proposals are online
+      operationId: deadlinereached_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/deadlinereached_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /submitnotify:
+    post:
+      summary: Trigger notification for successful proposal upload
+      description: Send a mail to inform a student that their proposal was uploaded
+        successfully
+      operationId: submitnotify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/submitnotify_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /changenotify:
+    post:
+      summary: Trigger notification for changes in a proposal
+      description: Send a mail to inform a user about changes in a proposal
+      operationId: changenotify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/changenotify_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /rejectnotify:
+    post:
+      summary: Trigger notification for proposal rejection
+      description: Send a mail to inform a student that their proposal was rejected
+      operationId: rejectnotify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/rejectnotify_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /acceptnotify:
+    post:
+      summary: Trigger notification for proposal acceptance
+      description: Send a mail to inform a student that their proposal was accepted
+      operationId: acceptnotify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/acceptnotify_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /generic:
+    post:
+      summary: Trigger a generic notification
+      description: Send a custom notification with specified subject and message
+      operationId: generic_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/generic_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /registerpnotify:
+    post:
+      summary: Trigger notification for sign-up with login details
+      description: Send a notification with login details to a list of users
+      operationId: registerpnotify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/registerpnotify_body"
+        required: true
+      responses:
+        "200":
+          description: Notification sent successfully
+        "400":
+          description: Invalid request
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+components:
+  schemas:
+    deadlinereached_body:
+      type: object
+      properties:
+        name:
+          type: array
+          description: List of recipient names
+          items:
+            type: string
+        mailAddresses:
+          type: array
+          description: List of email addresses
+          items:
+            type: string
+            format: email
+    submitnotify_body:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the student
+        mailAddresses:
+          type: string
+          description: Email addresses of recipient
+          format: email
+        ThesisId:
+          type: integer
+          format: int64
+          example: 38729
+    changenotify_body:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the user
+        mailAddresses:
+          type: string
+          description: Email addresses of recipient
+          format: email
+        ThesisId:
+          type: integer
+          format: int64
+          example: 38729
+    rejectnotify_body:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the student
+        mailAddresses:
+          type: string
+          description: Email addresses of recipient
+          format: email
+        ThesisId:
+          type: integer
+          format: int64
+          example: 38729
+    acceptnotify_body:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the student
+        mailAddresses:
+          type: string
+          description: Email addresses of recipient
+          format: email
+        ThesisId:
+          type: integer
+          format: int64
+          example: 38729
+    generic_body:
+      type: object
+      properties:
+        name:
+          type: array
+          description: Name of the recipient
+          items:
+            type: string
+        mailAddresses:
+          type: array
+          description: List of email addresses
+          items:
+            type: string
+            format: email
+        mailSubject:
+          type: string
+          description: Subject of the email
+        mailText:
+          type: string
+          description: Body of the email
+    registerpnotify_body:
+      type: object
+      properties:
+        names:
+          type: array
+          description: List of names
+          items:
+            type: string
+        mailAddresses:
+          type: array
+          description: List of email addresses
+          items:
+            type: string
+            format: email
+        codes:
+          type: array
+          description: List of login codes
+          items:
+            type: string
+

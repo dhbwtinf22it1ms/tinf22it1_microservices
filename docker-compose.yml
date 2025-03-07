@@ -31,3 +31,38 @@ services:
       retries: 5
       start_period: 10s
 
+  smtp_dev_server:
+    image: rnwood/smtp4dev
+    container_name: smtp_dev_server
+    restart: always
+    ports:           # Syntax : host_port:container_port
+      - "5000:80"    # Web UI 
+      - "2525:25"    # SMTP server ! DOesn't use TLS
+      - "143:143"    # IMAP server (optional)
+    environment:
+      - ServerOptions__HostName=smtp4dev.local
+      - ServerOptions__PortNumber=2525
+      - ServerOptions__AllowRemoteConnections=true
+      - ServerOptions__UserName=admin  # Set username
+      - ServerOptions__Password=secret # Set password
+    volumes:
+      - smtp4dev_data:/smtp4dev
+
+  notification_flask_server:
+    build:
+      context: ./notification_service
+    container_name: notification_flask_server
+    restart: always
+    working_dir: /usr/src/app
+    volumes:
+      - ./notification_service:/usr/src/app
+    ports:
+      - "8081:8081"
+    depends_on:
+      - smtp_dev_server
+    environment:
+      - SMTP_HOST=smtp_dev_server
+      - SMTP_PORT=2525
+
+volumes:
+  smtp4dev_data:
