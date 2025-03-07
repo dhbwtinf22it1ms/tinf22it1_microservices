@@ -31,15 +31,24 @@ CREATE TABLE IF NOT EXISTS "company" (
 CREATE TABLE IF NOT EXISTS "thesis" (
 	"thesisId" SERIAL NOT NULL,
 	"topic" VARCHAR NOT NULL,
-	"studentId" INTEGER NOT NULL,
-	"companyId" INTEGER NOT NULL,
-	"operationalLocationDepartment" INTEGER NOT NULL,
+	"studentId" UUID NOT NULL,
+	"studentFirstName" VARCHAR NOT NULL,
+	"studentLastName" VARCHAR NOT NULL,
+	"studentTitle" VARCHAR NOT NULL,
+	"studentRegistrationNumber" VARCHAR NOT NULL,
+	"studentCourse" VARCHAR NOT NULL,
+	"companyStreet" VARCHAR NOT NULL,
+	"companyZipcode" INTEGER NOT NULL,
+	"companyCity" VARCHAR NOT NULL,
+	"companyName" VARCHAR NOT NULL,
+	"companyCountry" VARCHAR NOT NULL,
+	"operationalLocationDepartment" VARCHAR NOT NULL,
 	"operationalLocationStreet" VARCHAR NOT NULL,
 	"operationalLocationZipcode" INTEGER NOT NULL,
 	"operationalLocationCity" VARCHAR NOT NULL,
 	"operationalLocationCountry" VARCHAR NOT NULL,
-	"inCompanySupervisorTitle" VARCHAR NULL DEFAULT NULL::character varying,
-	"inCompanySupervisorAcademicTitle" VARCHAR NULL DEFAULT NULL::character varying,
+	"inCompanySupervisorAcademicTitle" VARCHAR NULL DEFAULT NULL,
+	"inCompanySupervisorTitle" VARCHAR NULL DEFAULT NULL,
 	"inCompanySupervisorFirstName" VARCHAR NOT NULL,
 	"inCompanySupervisorLastName" VARCHAR NOT NULL,
 	"inCompanySupervisorEmail" VARCHAR NOT NULL,
@@ -47,20 +56,12 @@ CREATE TABLE IF NOT EXISTS "thesis" (
 	"inCompanySupervisorAcademicDegree" VARCHAR NOT NULL,
 	"preparationPeriodBegin" DATE NOT NULL,
 	"preparationPeriodEnd" DATE NOT NULL,
+	"excludedCompanies" VARCHAR NOT NULL,
 	PRIMARY KEY ("thesisId"),
-	CONSTRAINT "FK_Thesis_company" FOREIGN KEY ("companyId") REFERENCES "company" ("companyId") ON UPDATE NO ACTION ON DELETE NO ACTION
+	UNIQUE ("studentId")
 );
 
 -- Daten-Export vom Benutzer nicht ausgewählt
-
--- Exportiere Struktur von Tabelle public.SupervisorsExclusion
-CREATE TABLE IF NOT EXISTS "supervisorsExclusion" (
-	"thesisId" INTEGER NOT NULL,
-	"companyId" INTEGER NOT NULL,
-	PRIMARY KEY ("thesisId", "companyId"),
-	CONSTRAINT "FK__Thesis" FOREIGN KEY ("thesisId") REFERENCES "thesis" ("thesisId") ON UPDATE NO ACTION ON DELETE NO ACTION,
-	CONSTRAINT "FK__partnerCompany" FOREIGN KEY ("companyId") REFERENCES "company" ("companyId") ON UPDATE NO ACTION ON DELETE NO ACTION
-);
 
 -- Exportiere Struktur von Tabelle public.comments
 CREATE TABLE IF NOT EXISTS "comments" (
