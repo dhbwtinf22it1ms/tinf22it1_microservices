@@ -1,0 +1,30 @@
+# coding: utf-8
+
+# flake8: noqa
+from __future__ import absolute_import
+# import models into model package
+from swagger_server.models.comment import Comment
+from swagger_server.models.error import Error
+from swagger_server.models.inline_response200 import InlineResponse200
+from swagger_server.models.inline_response2001 import InlineResponse2001
+from swagger_server.models.inline_response2002 import InlineResponse2002
+from swagger_server.models.inline_response2003 import InlineResponse2003
+from swagger_server.models.inline_response201 import InlineResponse201
+from swagger_server.models.inline_response2011 import InlineResponse2011
+from swagger_server.models.inline_response204 import InlineResponse204
+from swagger_server.models.inline_response2041 import InlineResponse2041
+from swagger_server.models.one_of_user_registration_status import OneOfUserRegistrationStatus
+from swagger_server.models.registration_token import RegistrationToken
+from swagger_server.models.thesis import Thesis
+from swagger_server.models.thesis_id import ThesisId
+from swagger_server.models.thesis_in_company_supervisor import ThesisInCompanySupervisor
+from swagger_server.models.thesis_operational_location import ThesisOperationalLocation
+from swagger_server.models.thesis_operational_location_address import ThesisOperationalLocationAddress
+from swagger_server.models.thesis_partner_company import ThesisPartnerCompany
+from swagger_server.models.thesis_partner_company_address import ThesisPartnerCompanyAddress
+from swagger_server.models.thesis_preparation_period import ThesisPreparationPeriod
+from swagger_server.models.thesis_student import ThesisStudent
+from swagger_server.models.thesis_summary import ThesisSummary
+from swagger_server.models.user import User
+from swagger_server.models.user_id import UserId
+from swagger_server.models.users_body import UsersBody
