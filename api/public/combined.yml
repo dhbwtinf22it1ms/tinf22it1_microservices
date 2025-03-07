@@ -424,12 +424,10 @@ components:
           properties:
             from:
               type: string
-              description: ISO-8601 timestamp
-              example: 2024-06-01T00:00:00+0000
+              format: date
             to:
               type: string
-              description: ISO-8601 timestamp
-              example: 2025-01-01T23:59:59+0000
+              format: date
         partnerCompany:
           type: object
           properties:
@@ -500,10 +498,8 @@ components:
               example: "Master of Science"
         
         excludeSupervisorsFromCompanies:
-          type: array
-          items:
-            type: string
-          example: ["Universität Mannheim"]
+          type: string
+          example: "Universität Mannheim, Google"
         
         # TODO status
     ThesisSummary:
@@ -551,9 +547,9 @@ components:
       example: 38729
       readOnly: true
     UserId:
-      type: integer
-      format: int64
-      example: 83791
+      type: string
+      format: uuid
+      example: 48b5becd-f98c-4897-98aa-be37eecb6a68
       readOnly: true
     RegistrationToken:
       type: string
@@ -567,6 +563,9 @@ components:
         message:
           type: string
           example: "I really like your thesis. It sounds very interesting :)"
+        createdAt:
+          type: string
+          format: date-time
 
   parameters:
     thesisId:
@@ -575,11 +574,11 @@ components:
       description: The thesis id
       required: true
       schema:
-        $ref: 'common.yml#/components/schemas/ThesisId'
+        $ref: '#/components/schemas/ThesisId'
     userId:
       name: userId
       in: path
       description: The user id
       required: true
       schema:
-        $ref: 'common.yml#/components/schemas/UserId'
+        $ref: '#/components/schemas/UserId'
