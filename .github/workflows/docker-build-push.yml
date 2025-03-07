@@ -105,8 +105,8 @@ jobs:
           context: ./src/dotnet
           file: ./src/dotnet/Dhbw.ThesisManager/Dhbw.ThesisManager.Api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-notification.outputs.tags }}
-          labels: ${{ steps.meta-notification.outputs.labels }}
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
   
