@@ -1,4 +1,4 @@
-namespace Dhbw.ThesisManager.Api.Data.Entities;
+namespace Dhbw.ThesisManager.Domain.Data.Entities;
 
 public class Thesis
 {

@@ -1,4 +1,4 @@
-using Dhbw.ThesisManager.Api.Data;
+using Dhbw.ThesisManager.Domain.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +7,7 @@ var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false)
     .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json", optional: true)
+    .AddEnvironmentVariables()
     .Build();
 
 var services = new ServiceCollection();

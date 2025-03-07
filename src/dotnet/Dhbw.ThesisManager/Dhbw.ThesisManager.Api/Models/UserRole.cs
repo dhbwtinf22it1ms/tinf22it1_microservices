@@ -6,15 +6,15 @@ namespace Dhbw.ThesisManager.Api.Models
     public enum UserRole
     {
         [EnumMember(Value = @"student")]
-        Student = 0,
+        student = 0,
 
         [EnumMember(Value = @"supervisor")]
-        Supervisor = 1,
+        supervisor = 1,
 
         [EnumMember(Value = @"secretary")]
-        Secretary = 2,
+        secretary = 2,
 
         [EnumMember(Value = @"administrator")]
-        Administrator = 3,
+        administrator = 3,
     }
 }

@@ -27,8 +27,8 @@ public class UserControllerTests
         {
             Ok = new List<User>
             {
-                new() { Id = 1, FirstName = "John", LastName = "Doe", Role = UserRole.Student },
-                new() { Id = 2, FirstName = "Jane", LastName = "Smith", Role = UserRole.Supervisor }
+                new() { Id = 1, FirstName = "John", LastName = "Doe", Role = UserRole.student },
+                new() { Id = 2, FirstName = "Jane", LastName = "Smith", Role = UserRole.supervisor }
             }
         };
 
@@ -57,7 +57,7 @@ public class UserControllerTests
                 { 
                     FirstName = "John", 
                     LastName = "Doe", 
-                    Role = UserRole.Student 
+                    Role = UserRole.student 
                 },
                 RegistrationToken = "token123"
             },
@@ -67,7 +67,7 @@ public class UserControllerTests
                 { 
                     FirstName = "Jane", 
                     LastName = "Smith", 
-                    Role = UserRole.Supervisor 
+                    Role = UserRole.supervisor 
                 },
                 RegistrationToken = "token456"
             }
@@ -102,7 +102,7 @@ public class UserControllerTests
                 Id = 1,
                 FirstName = "John",
                 LastName = "Doe",
-                Role = UserRole.Student
+                Role = UserRole.student
             }
         };
 
@@ -127,7 +127,7 @@ public class UserControllerTests
             Id = 1,
             FirstName = "John",
             LastName = "Doe",
-            Role = UserRole.Student
+            Role = UserRole.student
         };
 
         var expectedResponse = new UserResponse { Ok = user };
@@ -201,7 +201,7 @@ public class UserControllerTests
             Id = 999,
             FirstName = "John",
             LastName = "Doe",
-            Role = UserRole.Student
+            Role = UserRole.student
         };
 
         _keycloakServiceMock.Setup(x => x.UpdateUserAsync(999, user, It.IsAny<CancellationToken>()))

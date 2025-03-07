@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dhbw.ThesisManager.Api\Dhbw.ThesisManager.Api.csproj" />
+    <ProjectReference Include="..\Dhbw.ThesisManager.Domain\Dhbw.ThesisManager.Domain.csproj" />
   </ItemGroup>
 
 </Project>
