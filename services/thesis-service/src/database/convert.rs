@@ -1,5 +1,3 @@
-use std::net::Incoming;
-
 use chrono::{DateTime, Utc, NaiveDate};
 
 use crate::database::models as db;
@@ -11,15 +9,15 @@ impl From<db::Thesis> for api::Thesis {
             DateTime::from_naive_utc_and_offset(naive_date.and_hms_opt(0, 0, 0).unwrap(), Utc)
         };
         let preparation_period = api::ThesisPreparationPeriod {
-            from: naive_date_to_utc_datetime(thesis.preparation_period_begin),
-            to: naive_date_to_utc_datetime(thesis.preparation_period_end),
+            from: naive_date_to_utc_datetime(thesis.preparationPeriodBegin),
+            to: naive_date_to_utc_datetime(thesis.preparationPeriodEnd),
         };
 
         Self {
             id: Some(api::ThesisId(thesis.id as u32)),
             topic: thesis.topic,
             student: api::ThesisStudent {
-                id: Some(api::UserId(thesis.student_id as u32)),
+                id: Some(api::UserId(thesis.studentId)),
                 title: "".to_owned(),
                 first_name: "".to_owned(),
                 last_name: "".to_owned(),
@@ -64,22 +62,21 @@ impl From<api::Thesis> for db::Thesis {
         db::Thesis {
             id: thesis.id.unwrap().0 as i32,
             topic: thesis.topic,
-            student_id: thesis.student.id.unwrap().0 as i32,
-            company_id: 0,
-            operational_location_department: 0,
-            operational_location_street: thesis.operational_location.address.street,
-            operational_location_zipcode: thesis.operational_location.address.zip_code as i32,
-            operational_location_city: thesis.operational_location.address.city,
-            operational_location_country: thesis.operational_location.address.country,
-            in_company_supervisor_title: Some(thesis.in_company_supervisor.title),
-            in_company_supervisor_academic_title: Some(thesis.in_company_supervisor.academic_title),
-            in_company_supervisor_first_name: thesis.in_company_supervisor.first_name,
-            in_company_supervisor_last_name: thesis.in_company_supervisor.last_name,
-            in_company_supervisor_email: thesis.in_company_supervisor.email,
-            in_company_supervisor_phone_number: thesis.in_company_supervisor.phone_number,
-            in_company_supervisor_academic_degree: thesis.in_company_supervisor.academic_degree,
-            preparation_period_begin: thesis.preparation_period.from.date_naive(),
-            preparation_period_end: thesis.preparation_period.to.date_naive(),
+            studentId: thesis.student.id.unwrap().0,
+            operationalLocationDepartment: thesis.operational_location.department,
+            operationalLocationStreet: thesis.operational_location.address.street,
+            operationalLocationZipcode: thesis.operational_location.address.zip_code as i32,
+            operationalLocationCity: thesis.operational_location.address.city,
+            operationalLocationCountry: thesis.operational_location.address.country,
+            inCompanySupervisorTitle: Some(thesis.in_company_supervisor.title),
+            inCompanySupervisorAcademicTitle: Some(thesis.in_company_supervisor.academic_title),
+            inCompanySupervisorFirstName: thesis.in_company_supervisor.first_name,
+            inCompanySupervisorLastName: thesis.in_company_supervisor.last_name,
+            inCompanySupervisorEmail: thesis.in_company_supervisor.email,
+            inCompanySupervisorPhoneNumber: thesis.in_company_supervisor.phone_number,
+            inCompanySupervisorAcademicDegree: thesis.in_company_supervisor.academic_degree,
+            preparationPeriodBegin: thesis.preparation_period.from.date_naive(),
+            preparationPeriodEnd: thesis.preparation_period.to.date_naive(),
         }
     }
 }

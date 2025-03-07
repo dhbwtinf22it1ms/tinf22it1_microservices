@@ -1,9 +1,13 @@
 use anyhow::Context;
-use chrono::{DateTime, NaiveDate};
+use chrono::NaiveDate;
 use diesel::{
-    query_dsl::methods::{FilterDsl, FindDsl, SelectDsl}, r2d2::{self, ConnectionManager}, result::DatabaseErrorKind, ExpressionMethods, Insertable, PgConnection, RunQueryDsl, SelectableHelper
+    query_dsl::methods::{FilterDsl, SelectDsl},
+    r2d2::{self, ConnectionManager},
+    result::DatabaseErrorKind,
+    ExpressionMethods, Insertable, PgConnection, RunQueryDsl, SelectableHelper,
 };
 use models::Thesis;
+use uuid::Uuid;
 
 use crate::models::{Thesis as ApiThesis, ThesisId, UserId};
 
@@ -62,50 +66,50 @@ pub fn list_theses(connection: &mut PgConnection) -> Result<Vec<ApiThesis>> {
 }
 
 pub fn create_thesis(connection: &mut PgConnection, thesis: ApiThesis) -> Result<ApiThesis> {
+
+    #[allow(non_camel_case_types)]
     #[derive(Insertable)]
     #[diesel(table_name = schema::thesis)]
     pub struct NewThesis<'a> {
         pub topic: &'a str,
-        pub student_id: i32,
-        pub company_id: i32,
-        pub operational_location_department: i32,
-        pub operational_location_street: &'a str,
-        pub operational_location_zipcode: i32,
-        pub operational_location_city: &'a str,
-        pub operational_location_country: &'a str,
-        pub in_company_supervisor_title: &'a str,
-        pub in_company_supervisor_academic_title: &'a str,
-        pub in_company_supervisor_first_name: &'a str,
-        pub in_company_supervisor_last_name: &'a str,
-        pub in_company_supervisor_email: &'a str,
-        pub in_company_supervisor_phone_number: &'a str,
-        pub in_company_supervisor_academic_degree: &'a str,
-        preparation_period_begin: chrono::NaiveDate,
-        preparation_period_end: chrono::NaiveDate,
+        pub studentId: Uuid,
+        pub operationalLocationDepartment: &'a str,
+        pub operationalLocationStreet: &'a str,
+        pub operationalLocationZipcode: i32,
+        pub operationalLocationCity: &'a str,
+        pub operationalLocationCountry: &'a str,
+        pub inCompanySupervisorTitle: &'a str,
+        pub inCompanySupervisorAcademicTitle: &'a str,
+        pub inCompanySupervisorFirstName: &'a str,
+        pub inCompanySupervisorLastName: &'a str,
+        pub inCompanySupervisorEmail: &'a str,
+        pub inCompanySupervisorPhoneNumber: &'a str,
+        pub inCompanySupervisorAcademicDegree: &'a str,
+        preparationPeriodBegin: chrono::NaiveDate,
+        preparationPeriodEnd: chrono::NaiveDate,
     }
 
     let new_thesis = NewThesis {
         topic: &thesis.topic,
-        student_id: thesis
+        studentId: thesis
             .student
             .id
-            .expect("student id to be set for new theses")
-            .0 as i32,
-        company_id: 1,
-        operational_location_department: 0,
-        operational_location_street: "",
-        operational_location_zipcode: 1234567,
-        operational_location_city: "",
-        operational_location_country: "",
-        in_company_supervisor_title: "",
-        in_company_supervisor_academic_title: "",
-        in_company_supervisor_first_name: "",
-        in_company_supervisor_last_name: "",
-        in_company_supervisor_email: "",
-        in_company_supervisor_phone_number: "",
-        in_company_supervisor_academic_degree: "",
-        preparation_period_begin: NaiveDate::from_isoywd(2025, 2, chrono::Weekday::Sun),
-        preparation_period_end: NaiveDate::from_isoywd(2025, 3, chrono::Weekday::Sun),
+            .expect("stduent id to be set for new theses")
+            .0,
+        operationalLocationDepartment: "",
+        operationalLocationStreet: "",
+        operationalLocationZipcode: 123456,
+        operationalLocationCity: "",
+        operationalLocationCountry: "",
+        inCompanySupervisorTitle: "",
+        inCompanySupervisorAcademicTitle: "",
+        inCompanySupervisorFirstName: "",
+        inCompanySupervisorLastName: "",
+        inCompanySupervisorEmail: "",
+        inCompanySupervisorPhoneNumber: "",
+        inCompanySupervisorAcademicDegree: "",
+        preparationPeriodBegin: NaiveDate::from_isoywd(2025, 2, chrono::Weekday::Sun),
+        preparationPeriodEnd: NaiveDate::from_isoywd(2025, 3, chrono::Weekday::Sun),
     };
 
     let db_result = diesel::insert_into(schema::thesis::dsl::thesis)
@@ -131,11 +135,14 @@ pub fn get_thesis_by_id(connection: &mut PgConnection, id: ThesisId) -> Result<A
     Ok(result)
 }
 
-pub fn get_thesis_by_student_id(connection: &mut PgConnection, user_id: UserId) -> Result<ApiThesis> {
+pub fn get_thesis_by_student_id(
+    connection: &mut PgConnection,
+    user_id: UserId,
+) -> Result<ApiThesis> {
     use schema::thesis::dsl;
 
     let db_result = dsl::thesis
-        .filter(dsl::student_id.eq(user_id.0 as i32))
+        .filter(dsl::studentId.eq(user_id.0))
         .select(models::Thesis::as_select())
         .first(connection)?;
 
@@ -146,7 +153,7 @@ pub fn get_thesis_by_student_id(connection: &mut PgConnection, user_id: UserId) 
 
 pub fn update_thesis(connection: &mut PgConnection, thesis: ApiThesis) -> Result<ApiThesis> {
     use schema::thesis::dsl;
-    
+
     let db_thesis = Thesis::from(thesis);
 
     let db_thesis = diesel::update(dsl::thesis)
