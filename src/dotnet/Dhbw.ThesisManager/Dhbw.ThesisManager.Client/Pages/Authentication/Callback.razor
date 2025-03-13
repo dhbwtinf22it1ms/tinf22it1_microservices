@@ -1,0 +1,105 @@
+@page "/authentication/callback"
+@using System.Text.Json
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject HttpClient HttpClient
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <span class="ms-2">Processing login...</span>
+</div>
+
+@code {
+    // Flag to track if component is initialized
+    private bool _isInitialized = false;
+    
+    protected override void OnInitialized()
+    {
+        _isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _isInitialized)
+        {
+            await ProcessAuthenticationResponse();
+        }
+    }
+
+    private async Task ProcessAuthenticationResponse()
+    {
+        try
+        {
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            
+            // Parse query parameters
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var code = queryParams["code"];
+            var state = queryParams["state"];
+            var error = queryParams["error"];
+            
+            if (!string.IsNullOrEmpty(error))
+            {
+                // Handle error
+                await JSRuntime.InvokeVoidAsync("alert", $"Authentication error: {error}");
+                NavigationManager.NavigateTo("/authentication/login");
+                return;
+            }
+            
+            if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
+            {
+                // Missing required parameters
+                NavigationManager.NavigateTo("/authentication/login");
+                return;
+            }
+            
+            // Verify state parameter to prevent CSRF
+            var storedState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "auth_state_param");
+            if (string.IsNullOrEmpty(storedState) || storedState != state)
+            {
+                throw new InvalidOperationException("Invalid state parameter");
+            }
+
+            // Clear the stored state
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state_param");
+            
+            // Keycloak configuration
+            string keycloakUrl = "http://localhost:8080";
+            string realm = "thesis-management";
+            string clientId = "thesis-management-webapp";
+            
+            // Exchange authorization code for tokens
+            var tokenEndpoint = $"{keycloakUrl}/realms/{realm}/protocol/openid-connect/token";
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["grant_type"] = "authorization_code",
+                ["client_id"] = clientId,
+                ["code"] = code,
+                ["redirect_uri"] = $"{NavigationManager.BaseUri}authentication/callback"
+            });
+
+            var response = await HttpClient.PostAsync(tokenEndpoint, content);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException($"Failed to exchange code for tokens: {response.StatusCode}");
+            }
+
+            // Parse the token response
+            var tokenJson = await response.Content.ReadAsStringAsync();
+            
+            // Store tokens in local storage
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "auth_state", tokenJson);
+            
+            // Redirect to home page
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            await JSRuntime.InvokeVoidAsync("alert", $"Authentication error: {ex.Message}");
+            NavigationManager.NavigateTo("/authentication/login");
+        }
+    }
+}

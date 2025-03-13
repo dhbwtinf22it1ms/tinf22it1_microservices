@@ -1,7 +1,89 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Bachelor Thesis Manager</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView>
+    <Authorized>
+        <div class="jumbotron">
+            <h1 class="display-4">Bachelor Thesis Manager</h1>
+            <p class="lead">Welcome to the DHBW Bachelor Thesis Management System</p>
+            <hr class="my-4">
+            <p>This application helps students, supervisors, and administrators manage bachelor theses at DHBW.</p>
+        </div>
 
-Welcome to your new app.
+        <div class="row mt-4">
+            <AuthorizeView Roles="student">
+                <Authorized Context="studentContext">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">For Students</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>As a student, you can:</p>
+                                <ul>
+                                    <li>Create and manage your bachelor thesis</li>
+                                    <li>View and update thesis details</li>
+                                    <li>Communicate with supervisors through comments</li>
+                                </ul>
+                                <a href="student/thesis" class="btn btn-primary">Manage My Thesis</a>
+                            </div>
+                        </div>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            
+            <AuthorizeView Roles="supervisor">
+                <Authorized Context="supervisorContext">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">For Supervisors</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>As a supervisor, you can:</p>
+                                <ul>
+                                    <li>View all bachelor theses</li>
+                                    <li>Review thesis details</li>
+                                    <li>Provide feedback through comments</li>
+                                </ul>
+                                <a href="supervisor/theses" class="btn btn-success">View All Theses</a>
+                            </div>
+                        </div>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            
+            <AuthorizeView Roles="administrator,secretary">
+                <Authorized Context="adminContext">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">For Administrators</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>As an administrator or secretary, you can:</p>
+                                <ul>
+                                    <li>Manage user accounts</li>
+                                    <li>Import users via CSV</li>
+                                    <li>Regenerate registration tokens</li>
+                                </ul>
+                                <a href="admin/users" class="btn btn-info">Manage Users</a>
+                            </div>
+                        </div>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="jumbotron">
+            <h1 class="display-4">Bachelor Thesis Manager</h1>
+            <p class="lead">Welcome to the DHBW Bachelor Thesis Management System</p>
+            <hr class="my-4">
+            <p>Please log in to access the application features.</p>
+            <a href="/authentication/login" class="btn btn-primary btn-lg">Login</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

@@ -1,0 +1,65 @@
+@page "/authentication/login"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow" style="width: 24rem;">
+        <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0">Bachelor Thesis Manager</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title text-center mb-4">Login</h5>
+            <p class="card-text text-center">Please log in to access the application.</p>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" @onclick="RedirectToKeycloak">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login with Keycloak
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Flag to track if component is initialized
+    private bool _isInitialized = false;
+
+    protected override void OnInitialized()
+    {
+        _isInitialized = true;
+    }
+
+    private async Task RedirectToKeycloak()
+    {
+        // Only execute JavaScript interop if component is initialized
+        if (!_isInitialized)
+            return;
+
+        // Keycloak configuration
+        string keycloakUrl = "http://localhost:8080";
+        string realm = "thesis-management";
+        string clientId = "thesis-management-webapp";
+        
+        try
+        {
+            // Generate a random state for CSRF protection
+            var state = Guid.NewGuid().ToString();
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "auth_state_param", state);
+            
+            // Build the authorization URL
+            var redirectUri = NavigationManager.BaseUri + "authentication/callback";
+            var authUrl = $"{keycloakUrl}/realms/{realm}/protocol/openid-connect/auth" +
+                          $"?client_id={clientId}" +
+                          $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                          $"&response_type=code" +
+                          $"&scope=openid profile email" +
+                          $"&state={state}";
+            
+            // Redirect to Keycloak login page
+            await JSRuntime.InvokeVoidAsync("window.location.assign", authUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error redirecting to Keycloak: {ex.Message}");
+        }
+    }
+}

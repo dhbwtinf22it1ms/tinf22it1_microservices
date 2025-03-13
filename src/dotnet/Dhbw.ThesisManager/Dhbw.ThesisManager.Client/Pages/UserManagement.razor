@@ -1,0 +1,223 @@
+@page "/admin/users"
+@inject Dhbw.ThesisManager.UserClient.UserClient UserApiClient
+@inject Dhbw.ThesisManager.UserClient.RegistrationClient RegistrationClient
+@inject IJSRuntime JSRuntime
+@using Dhbw.ThesisManager.UserClient
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "administrator,secretary")]
+
+<h3>User Management</h3>
+
+<div class="mb-4">
+    <h4>Import Users from CSV</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <InputFile OnChange="LoadCSVFile" class="form-control mb-2" accept=".csv" />
+            <button class="btn btn-primary" @onclick="ImportUsers" disabled="@(!csvLoaded)">Import Users</button>
+        </div>
+    </div>
+    @if (importMessage != null)
+    {
+        <div class="alert @(importSuccess ? "alert-success" : "alert-danger") mt-2">
+            @importMessage
+        </div>
+    }
+</div>
+
+<div class="mb-4">
+    <h4>User List</h4>
+    <button class="btn btn-secondary mb-2" @onclick="LoadUsers">Refresh</button>
+    
+    @if (isLoading)
+    {
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    }
+    else if (users == null || !users.Any())
+    {
+        <div class="alert alert-info">No users found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Registration Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in users)
+                    {
+                        <tr>
+                            <td>@user.Id</td>
+                            <td>@user.FirstName @user.LastName</td>
+                            <td>@user.Email</td>
+                            <td>@user.Role</td>
+                            <td>@(user.RegistrationStatus?.Pending != null ? "Pending" : "Registered")</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => RegenerateToken(user.Id)">
+                                    Regenerate Token
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Dhbw.ThesisManager.UserClient.User> users;
+    private bool isLoading = false;
+    private bool csvLoaded = false;
+    private List<Anonymous> csvUsers = new();
+    private string importMessage;
+    private bool importSuccess;
+    private IBrowserFile csvFile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        try
+        {
+            var response = await UserApiClient.UsersGETAsync(CancellationToken.None);
+            users = response.Ok?.ToList() ?? new List<Dhbw.ThesisManager.UserClient.User>();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error loading users: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RegenerateToken(long userId)
+    {
+        try
+        {
+            await RegistrationClient.TokenAsync(userId, CancellationToken.None);
+            await JSRuntime.InvokeVoidAsync("alert", "Registration token regenerated and sent to user.");
+            await LoadUsers();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error regenerating token: {ex.Message}");
+        }
+    }
+
+    private async Task LoadCSVFile(InputFileChangeEventArgs e)
+    {
+        csvFile = e.File;
+        csvLoaded = false;
+        csvUsers.Clear();
+        importMessage = null;
+
+        try
+        {
+            using var stream = csvFile.OpenReadStream(maxAllowedSize: 1024 * 1024); // 1MB max
+            using var reader = new StreamReader(stream);
+            
+            string line = await reader.ReadLineAsync(); // Header
+            if (line == null)
+            {
+                importMessage = "CSV file is empty";
+                importSuccess = false;
+                return;
+            }
+
+            // Validate header
+            var headers = line.Split(',');
+            if (!headers.Contains("FirstName") || !headers.Contains("LastName") || 
+                !headers.Contains("Email") || !headers.Contains("Role"))
+            {
+                importMessage = "CSV file must contain FirstName, LastName, Email, and Role columns";
+                importSuccess = false;
+                return;
+            }
+
+            // Parse data
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                var values = line.Split(',');
+                if (values.Length < 4) continue;
+
+                var firstName = values[Array.IndexOf(headers, "FirstName")].Trim();
+                var lastName = values[Array.IndexOf(headers, "LastName")].Trim();
+                var email = values[Array.IndexOf(headers, "Email")].Trim();
+                var roleStr = values[Array.IndexOf(headers, "Role")].Trim();
+
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(roleStr))
+                    continue;
+
+                if (!Enum.TryParse<Dhbw.ThesisManager.UserClient.UserRole>(roleStr, true, out var role))
+                    continue;
+
+                var user = new Dhbw.ThesisManager.UserClient.User
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    Role = role
+                };
+
+                var request = new Anonymous
+                {
+                    User = user,
+                    RegistrationToken = Guid.NewGuid().ToString() // Generate a random token
+                };
+
+                csvUsers.Add(request);
+            }
+
+            csvLoaded = csvUsers.Count > 0;
+            importMessage = $"Loaded {csvUsers.Count} users from CSV";
+            importSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            importMessage = $"Error loading CSV: {ex.Message}";
+            importSuccess = false;
+        }
+    }
+
+    private async Task ImportUsers()
+    {
+        if (!csvLoaded || !csvUsers.Any())
+        {
+            importMessage = "No valid users to import";
+            importSuccess = false;
+            return;
+        }
+
+        try
+        {
+            var response = await UserApiClient.UsersPOSTAsync(csvUsers, CancellationToken.None);
+            importMessage = $"Successfully imported {response.Ok?.Count ?? 0} users";
+            importSuccess = true;
+            csvLoaded = false;
+            csvUsers.Clear();
+            await LoadUsers();
+        }
+        catch (Exception ex)
+        {
+            importMessage = $"Error importing users: {ex.Message}";
+            importSuccess = false;
+        }
+    }
+}

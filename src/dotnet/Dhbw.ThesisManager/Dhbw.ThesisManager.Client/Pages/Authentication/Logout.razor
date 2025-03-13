@@ -1,0 +1,55 @@
+@page "/authentication/logout"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <span class="ms-2">Logging out...</span>
+</div>
+
+@code {
+    // Flag to track if component is initialized
+    private bool _isInitialized = false;
+    
+    protected override void OnInitialized()
+    {
+        _isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _isInitialized)
+        {
+            await PerformLogout();
+        }
+    }
+
+    private async Task PerformLogout()
+    {
+        try
+        {
+            // Keycloak configuration
+            string keycloakUrl = "http://localhost:8080";
+            string realm = "thesis-management";
+            string clientId = "thesis-management-webapp";
+            
+            // Clear local storage
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state");
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "auth_state_param");
+            
+            // Redirect to Keycloak logout endpoint
+            var logoutUrl = $"{keycloakUrl}/realms/{realm}/protocol/openid-connect/logout" +
+                           $"?client_id={clientId}" +
+                           $"&redirect_uri={Uri.EscapeDataString(NavigationManager.BaseUri + "authentication/login")}";
+            
+            await JSRuntime.InvokeVoidAsync("window.location.assign", logoutUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error during logout: {ex.Message}");
+            NavigationManager.NavigateTo("/authentication/login");
+        }
+    }
+}

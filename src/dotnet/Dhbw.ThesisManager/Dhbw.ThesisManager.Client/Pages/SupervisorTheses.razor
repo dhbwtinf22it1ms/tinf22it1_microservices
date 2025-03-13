@@ -1,0 +1,92 @@
+@page "/supervisor/theses"
+@using Microsoft.AspNetCore.Authorization
+@inject Client ApiClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "supervisor")]
+
+<h3>Bachelor Theses Overview</h3>
+
+@if (isLoading)
+{
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">
+        @errorMessage
+    </div>
+}
+else if (theses == null || !theses.Any())
+{
+    <div class="alert alert-info">
+        No theses found.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Student</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var thesis in theses)
+                {
+                    <tr>
+                        <td>@thesis.Id</td>
+                        <td>@thesis.Title</td>
+                        <td>@thesis.StudentFirstName @thesis.StudentLastName</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" @onclick="() => ViewThesisDetails(thesis.Id)">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private ICollection<ThesisSummary> theses;
+    private bool isLoading = true;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTheses();
+    }
+
+    private async Task LoadTheses()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            theses = await ApiClient.ThesesAllAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading theses: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ViewThesisDetails(long thesisId)
+    {
+        NavigationManager.NavigateTo($"/supervisor/thesis/{thesisId}");
+    }
+}

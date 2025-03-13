@@ -1,0 +1,263 @@
+@page "/supervisor/thesis/{ThesisId:long}"
+@using Microsoft.AspNetCore.Authorization
+@inject Client ApiClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "supervisor,administrator")]
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Thesis Details</h3>
+    <button class="btn btn-outline-secondary" @onclick="GoBack">
+        <span class="oi oi-arrow-left"></span> Back to List
+    </button>
+</div>
+
+@if (isLoading)
+{
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else if (errorMessage != null)
+{
+    <div class="alert alert-danger">
+        @errorMessage
+    </div>
+}
+else if (thesis != null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>@thesis.Topic</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Topic:</div>
+                <div class="col-md-9">@thesis.Topic</div>
+            </div>
+
+            <h5 class="mt-4">Student Information</h5>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Name:</div>
+                <div class="col-md-9">@thesis.Student.Title @thesis.Student.FirstName @thesis.Student.LastName</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Registration Number:</div>
+                <div class="col-md-9">@thesis.Student.RegistrationNumber</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Course:</div>
+                <div class="col-md-9">@thesis.Student.Course</div>
+            </div>
+
+            <h5 class="mt-4">Preparation Period</h5>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">From:</div>
+                <div class="col-md-9">@thesis.PreparationPeriod?.From</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">To:</div>
+                <div class="col-md-9">@thesis.PreparationPeriod?.To</div>
+            </div>
+
+            <h5 class="mt-4">Partner Company</h5>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Name:</div>
+                <div class="col-md-9">@thesis.PartnerCompany?.Name</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Address:</div>
+                <div class="col-md-9">
+                    @thesis.PartnerCompany?.Address?.Street<br />
+                    @thesis.PartnerCompany?.Address?.ZipCode @thesis.PartnerCompany?.Address?.City
+                </div>
+            </div>
+
+            <h5 class="mt-4">Operational Location</h5>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Company:</div>
+                <div class="col-md-9">@thesis.OperationalLocation?.CompanyName</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Department:</div>
+                <div class="col-md-9">@thesis.OperationalLocation?.Department</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Address:</div>
+                <div class="col-md-9">
+                    @thesis.OperationalLocation?.Address?.Street<br />
+                    @thesis.OperationalLocation?.Address?.ZipCode @thesis.OperationalLocation?.Address?.City, @thesis.OperationalLocation?.Address?.Country
+                </div>
+            </div>
+
+            <h5 class="mt-4">In-Company Supervisor</h5>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Name:</div>
+                <div class="col-md-9">
+                    @thesis.InCompanySupervisor?.Title 
+                    @thesis.InCompanySupervisor?.AcademicTitle 
+                    @thesis.InCompanySupervisor?.FirstName 
+                    @thesis.InCompanySupervisor?.LastName
+                    @(string.IsNullOrEmpty(thesis.InCompanySupervisor?.AcademicDegree) ? "" : ", " + thesis.InCompanySupervisor?.AcademicDegree)
+                </div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-md-3 fw-bold">Contact:</div>
+                <div class="col-md-9">
+                    Email: @thesis.InCompanySupervisor?.Email<br />
+                    Phone: @thesis.InCompanySupervisor?.PhoneNumber
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Comments</h4>
+        </div>
+        <div class="card-body">
+            @if (isLoadingComments)
+            {
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading comments...</span>
+                </div>
+            }
+            else if (comments == null || !comments.Any())
+            {
+                <p>No comments yet.</p>
+            }
+            else
+            {
+                <div class="list-group mb-3">
+                    @foreach (var comment in comments)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <strong>User ID: @comment.Author</strong>
+                            </div>
+                            <p class="mb-1 mt-2">@comment.Message</p>
+                        </div>
+                    }
+                </div>
+            }
+
+            <h5>Add Comment</h5>
+            <div class="mb-3">
+                <textarea class="form-control" @bind="newCommentText" rows="3" placeholder="Enter your comment here..."></textarea>
+            </div>
+            <button class="btn btn-primary" @onclick="AddComment" disabled="@string.IsNullOrWhiteSpace(newCommentText)">
+                Submit Comment
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public long ThesisId { get; set; }
+
+    private Thesis thesis;
+    private bool isLoading = true;
+    private bool isLoadingComments = false;
+    private string errorMessage;
+    private List<Comment> comments = new();
+    private string newCommentText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadThesis();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadThesis();
+    }
+
+    private async Task LoadThesis()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await ApiClient.ThesesGETAsync(ThesisId);
+            thesis = response.Ok;
+            
+            if (thesis != null)
+            {
+                await LoadComments();
+            }
+        }
+        catch (Dhbw.ThesisManager.Client.ApiException ex)
+        {
+            if (ex.StatusCode == 404)
+            {
+                errorMessage = "Thesis not found.";
+            }
+            else
+            {
+                errorMessage = $"Error loading thesis: {ex.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadComments()
+    {
+        if (thesis == null) return;
+
+        isLoadingComments = true;
+        try
+        {
+            var response = await ApiClient.CommentsGETAsync(ThesisId);
+            comments = response.Ok?.ToList() ?? new List<Comment>();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error loading comments: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingComments = false;
+        }
+    }
+
+    private async Task AddComment()
+    {
+        if (thesis == null || string.IsNullOrWhiteSpace(newCommentText)) return;
+
+        try
+        {
+            var comment = new Comment
+            {
+                Message = newCommentText
+            };
+
+            await ApiClient.CommentsPOSTAsync(ThesisId, comment);
+            newCommentText = string.Empty;
+            await LoadComments();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error adding comment: {ex.Message}");
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/supervisor/theses");
+    }
+
+    // Helper class to display comment timestamps
+    private class CommentWithTimestamp : Comment
+    {
+        public DateTime? Timestamp { get; set; }
+    }
+}
